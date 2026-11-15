@@ -1,9 +1,17 @@
 import io
+import html
+from typing import Optional
 from app.models.schemas import ProjectData
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, HRFlowable
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+
+def esc(text: Optional[str]) -> str:
+    """Escapes user text so ReportLab XML paragraph parser doesn't crash on &, <, >."""
+    if not text:
+        return ""
+    return html.escape(str(text).strip())
 
 class ExportService:
     @staticmethod
@@ -33,7 +41,8 @@ class ExportService:
                 lines.append("### Dramatis Personae (Characters)")
                 for char in project.research.characters:
                     lines.append(f"#### {char.name} ({char.role})")
-                    lines.append(f"- **Archetype:** {char.archetype}")
+                    if char.archetype:
+                        lines.append(f"- **Archetype:** {char.archetype}")
                     lines.append(f"- **Personality:** {char.personality}")
                     lines.append(f"- **Appearance:** {char.appearance}")
                     lines.append(f"- **Background:** {char.background}")
@@ -155,56 +164,57 @@ class ExportService:
 
         elements = []
 
-        elements.append(Paragraph(f"SwarmStudio: {project.title or 'Creative Project'}", title_style))
-        elements.append(Paragraph(f"<b>Format:</b> {project.project_type.upper()} &nbsp;|&nbsp; <b>Genre:</b> {project.genre} &nbsp;|&nbsp; <b>Tone:</b> {project.tone}", subtitle_style))
+        elements.append(Paragraph(f"SwarmStudio: {esc(project.title or 'Creative Project')}", title_style))
+        elements.append(Paragraph(f"<b>Format:</b> {esc(project.project_type.upper())} &nbsp;|&nbsp; <b>Genre:</b> {esc(project.genre)} &nbsp;|&nbsp; <b>Tone:</b> {esc(project.tone)}", subtitle_style))
         elements.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor('#E9D5FF'), spaceAfter=12))
 
         # 1. Concept
         elements.append(Paragraph("1. Concept & Storyline", heading_style))
-        elements.append(Paragraph(f"<b>Prompt:</b> {project.idea}", body_style))
+        elements.append(Paragraph(f"<b>Prompt:</b> {esc(project.idea)}", body_style))
         if project.story:
-            elements.append(Paragraph(f"<b>Logline:</b> {project.story.logline}", quote_style))
-            elements.append(Paragraph(f"<b>Synopsis:</b> {project.story.synopsis}", body_style))
+            elements.append(Paragraph(f"<b>Logline:</b> {esc(project.story.logline)}", quote_style))
+            elements.append(Paragraph(f"<b>Synopsis:</b> {esc(project.story.synopsis)}", body_style))
             elements.append(Spacer(1, 8))
 
         # 2. Characters
         if project.research and project.research.characters:
             elements.append(Paragraph("2. Characters & World Lore", heading_style))
-            elements.append(Paragraph(f"<b>World Building:</b> {project.research.world_building}", body_style))
-            for char in project.research.characters[:4]:
-                elements.append(Paragraph(f"<b>{char.name}</b> ({char.role}) - <i>{char.archetype}</i>: {char.personality}. Motivation: {char.motivation}", body_style))
+            elements.append(Paragraph(f"<b>World Building:</b> {esc(project.research.world_building)}", body_style))
+            for char in project.research.characters[:6]:
+                char_arch = f" - <i>{esc(char.archetype)}</i>" if char.archetype else ""
+                elements.append(Paragraph(f"<b>{esc(char.name)}</b> ({esc(char.role)}){char_arch}: {esc(char.personality)}. Motivation: {esc(char.motivation)}", body_style))
             elements.append(Spacer(1, 8))
 
         # 3. Scenes
         if project.story and project.story.scenes:
             elements.append(Paragraph("3. Scene Breakdown", heading_style))
-            for sc in project.story.scenes[:5]:
-                elements.append(Paragraph(f"<b>Scene {sc.scene_number}: {sc.title}</b> ({sc.location} - {sc.time})", body_style))
-                elements.append(Paragraph(f"<i>Action:</i> {sc.action}", quote_style))
+            for sc in project.story.scenes[:8]:
+                elements.append(Paragraph(f"<b>Scene {sc.scene_number}: {esc(sc.title)}</b> ({esc(sc.location)} - {esc(sc.time)})", body_style))
+                elements.append(Paragraph(f"<i>Action:</i> {esc(sc.action)}", quote_style))
                 if sc.dialogue:
-                    elements.append(Paragraph(f"<i>Dialogue:</i> {sc.dialogue}", quote_style))
+                    elements.append(Paragraph(f"<i>Dialogue:</i> {esc(sc.dialogue)}", quote_style))
             elements.append(Spacer(1, 8))
 
         # 4. Visuals & Audio
         if project.visuals or project.audio:
             elements.append(Paragraph("4. Visuals & Sound Atmosphere", heading_style))
             if project.visuals:
-                elements.append(Paragraph(f"<b>Art Direction:</b> {project.visuals.art_direction}", body_style))
-                elements.append(Paragraph(f"<b>Lighting:</b> {project.visuals.lighting_style}", body_style))
+                elements.append(Paragraph(f"<b>Art Direction:</b> {esc(project.visuals.art_direction)}", body_style))
+                elements.append(Paragraph(f"<b>Lighting:</b> {esc(project.visuals.lighting_style)}", body_style))
             if project.audio:
-                elements.append(Paragraph(f"<b>Musical Score:</b> {project.audio.music_score_direction}", body_style))
-                elements.append(Paragraph(f"<b>Tempo & Instruments:</b> {project.audio.tempo_and_instruments}", body_style))
+                elements.append(Paragraph(f"<b>Musical Score:</b> {esc(project.audio.music_score_direction)}", body_style))
+                elements.append(Paragraph(f"<b>Tempo & Instruments:</b> {esc(project.audio.tempo_and_instruments)}", body_style))
             elements.append(Spacer(1, 8))
 
         # 5. Critic Review
         if project.critic:
             elements.append(Paragraph(f"5. Critic Quality Review (Score: {project.critic.score}/100)", heading_style))
-            elements.append(Paragraph(f"<b>Editorial Verdict:</b> {project.critic.verdict}", body_style))
-            elements.append(Paragraph(f"<b>Continuity Status:</b> {project.critic.continuity_status}", body_style))
+            elements.append(Paragraph(f"<b>Editorial Verdict:</b> {esc(project.critic.verdict)}", body_style))
+            elements.append(Paragraph(f"<b>Continuity Status:</b> {esc(project.critic.continuity_status)}", body_style))
             if project.critic.strengths:
-                elements.append(Paragraph(f"<b>Key Strengths:</b> {'; '.join(project.critic.strengths)}", body_style))
+                elements.append(Paragraph(f"<b>Key Strengths:</b> {esc('; '.join(project.critic.strengths))}", body_style))
             if project.critic.suggestions_for_improvement:
-                elements.append(Paragraph(f"<b>Recommendations:</b> {'; '.join(project.critic.suggestions_for_improvement)}", body_style))
+                elements.append(Paragraph(f"<b>Recommendations:</b> {esc('; '.join(project.critic.suggestions_for_improvement))}", body_style))
 
         doc.build(elements)
         buffer.seek(0)

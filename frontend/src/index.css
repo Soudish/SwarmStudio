@@ -2,11 +2,55 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ═══════════════════════════════════════════
+   CSS Custom Properties — Theme Tokens
+   ═══════════════════════════════════════════ */
+:root {
+  --bg-primary: #090D16;
+  --bg-secondary: #0F1626;
+  --bg-card: #131B2E;
+  --bg-surface: #1A233A;
+  --bg-hover: #24304E;
+  --bg-input: #0d1220;
+  --text-primary: #F1F5F9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --border-primary: rgba(148, 163, 184, 0.12);
+  --border-accent: rgba(168, 85, 247, 0.15);
+  --scrollbar-track: #090D16;
+  --scrollbar-thumb: #2A3654;
+  --glass-bg: rgba(19, 27, 46, 0.7);
+  --glass-border: rgba(168, 85, 247, 0.15);
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  --selection-bg: #9333EA;
+}
+
+.light {
+  --bg-primary: #F8FAFC;
+  --bg-secondary: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --bg-surface: #F1F5F9;
+  --bg-hover: #E2E8F0;
+  --bg-input: #F1F5F9;
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --border-primary: rgba(148, 163, 184, 0.25);
+  --border-accent: rgba(168, 85, 247, 0.2);
+  --scrollbar-track: #F8FAFC;
+  --scrollbar-thumb: #CBD5E1;
+  --glass-bg: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(168, 85, 247, 0.15);
+  --shadow-color: rgba(0, 0, 0, 0.06);
+  --selection-bg: #A855F7;
+}
+
 @layer base {
   body {
-    background-color: #090D16;
-    color: #F1F5F9;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 }
 
@@ -17,11 +61,11 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #090D16;
+  background: var(--scrollbar-track);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #2A3654;
+  background: var(--scrollbar-thumb);
   border-radius: 4px;
 }
 
@@ -31,9 +75,9 @@
 
 /* Glassmorphism gradient utilities */
 .glass-panel {
-  background: rgba(19, 27, 46, 0.7);
+  background: var(--glass-bg);
   backdrop-filter: blur(16px);
-  border: 1px solid rgba(168, 85, 247, 0.15);
+  border: 1px solid var(--glass-border);
 }
 
 .glass-panel-hover {
@@ -61,4 +105,48 @@
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════
+   Theme-aware utility classes
+   ═══════════════════════════════════════════ */
+
+/* Primary background */
+.theme-bg-primary { background-color: var(--bg-primary); }
+.theme-bg-secondary { background-color: var(--bg-secondary); }
+.theme-bg-card { background-color: var(--bg-card); }
+.theme-bg-surface { background-color: var(--bg-surface); }
+.theme-bg-input { background-color: var(--bg-input); }
+
+/* Text colors */
+.theme-text-primary { color: var(--text-primary); }
+.theme-text-secondary { color: var(--text-secondary); }
+.theme-text-muted { color: var(--text-muted); }
+
+/* Border */
+.theme-border { border-color: var(--border-primary); }
+
+/* Smooth transitions for theme switch */
+.theme-transition {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Fade in animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Smooth slide-up for cards */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slideUp {
+  animation: slideUp 0.4s ease-out;
 }

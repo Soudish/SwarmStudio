@@ -22,5 +22,8 @@ class Settings(BaseModel):
     supabase_key: str = os.getenv("SUPABASE_KEY", "")
     storage_mode: str = os.getenv("STORAGE_MODE", "sqlite")
     demo_fallback_enabled: bool = os.getenv("DEMO_FALLBACK_ENABLED", "true").lower() in ("true", "1", "yes")
+    jwt_secret: str = os.getenv("JWT_SECRET", "swarmstudio-creative-swarm-secret-key-2026")
+    jwt_algorithm: str = "HS256"
+    jwt_expiration_days: int = 30
 
 settings = Settings()

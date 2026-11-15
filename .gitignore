@@ -23,6 +23,8 @@ backend/data/*.db-wal
 backend/data/*.db-shm
 backend/data/crewai/
 backend/data/credentials/
+backend/data/audio/
+backend/data/images/
 
 # Environment variables & secrets
 .env

@@ -2,19 +2,17 @@ import React, { useState } from 'react';
 import {
   Cpu,
   Database,
-  Sliders,
   CheckCircle2,
   AlertCircle,
   RefreshCw,
   Save,
   Copy,
   Check,
-  Terminal,
-  ExternalLink,
-  Sparkles
+  Terminal
 } from 'lucide-react';
 import { SettingsData } from '../../types';
 import { api } from '../../services/api';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface SettingsViewProps {
   settings: SettingsData | null;
@@ -25,6 +23,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   settings,
   onRefreshSettings,
 }) => {
+  const { isDark } = useTheme();
   const [ollamaUrl, setOllamaUrl] = useState(settings?.ollama_base_url || 'http://localhost:11434');
   const [ollamaModel, setOllamaModel] = useState(settings?.ollama_model || 'llama3.2');
   const [supabaseUrl, setSupabaseUrl] = useState(settings?.supabase_url || '');
@@ -96,26 +95,34 @@ CREATE POLICY "Allow public read/write" ON projects FOR ALL USING (true) WITH CH
     setTimeout(() => setCopiedSql(false), 2000);
   };
 
+  const cardBg = isDark ? 'bg-[#0F1626]' : 'bg-white';
+  const cardBorder = isDark ? 'border-purple-500/20' : 'border-purple-200 shadow-md';
+  const subCardBorder = isDark ? 'border-slate-800' : 'border-slate-200 shadow-sm';
+  const inputBg = isDark ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900';
+  const textPrimary = isDark ? 'text-white' : 'text-slate-900';
+  const textMuted = isDark ? 'text-slate-400' : 'text-slate-500';
+  const labelColor = isDark ? 'text-slate-300' : 'text-slate-700';
+
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-20">
       <div>
-        <h1 className="text-2xl font-bold text-white tracking-tight">System & AI Settings</h1>
-        <p className="text-xs text-slate-400 mt-1">
+        <h1 className={`text-2xl font-bold tracking-tight ${textPrimary}`}>System & AI Settings</h1>
+        <p className={`text-xs mt-1 ${textMuted}`}>
           Configure local Ollama LLM inference, Supabase cloud sync, and fallback execution.
         </p>
       </div>
 
       <form onSubmit={handleSave} className="space-y-6">
         {/* Ollama Configuration Section */}
-        <div className="p-6 md:p-8 rounded-3xl bg-[#0F1626] border border-purple-500/20 space-y-5 shadow-xl">
+        <div className={`p-6 md:p-8 rounded-3xl border space-y-5 shadow-xl ${cardBg} ${cardBorder}`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-purple-500/15 border border-purple-500/30 text-purple-400">
+              <div className={`p-2.5 rounded-xl border ${isDark ? 'bg-purple-500/15 border-purple-500/30 text-purple-400' : 'bg-purple-100 border-purple-200 text-purple-600'}`}>
                 <Cpu className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-white">Local AI Inference (Ollama)</h2>
-                <p className="text-xs text-slate-400">Run completely offline models with zero API subscription costs.</p>
+                <h2 className={`text-lg font-bold ${textPrimary}`}>Local AI Inference (Ollama)</h2>
+                <p className={`text-xs ${textMuted}`}>Run completely offline models with zero API subscription costs.</p>
               </div>
             </div>
 
@@ -123,8 +130,8 @@ CREATE POLICY "Allow public read/write" ON projects FOR ALL USING (true) WITH CH
               <span
                 className={`text-xs px-2.5 py-1 rounded-full font-bold flex items-center gap-1.5 ${
                   settings?.ollama_status?.online
-                    ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
-                    : 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+                    ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                    : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
                 }`}
               >
                 <span className={`w-2 h-2 rounded-full ${settings?.ollama_status?.online ? 'bg-emerald-400' : 'bg-amber-400'}`} />
@@ -135,7 +142,7 @@ CREATE POLICY "Allow public read/write" ON projects FOR ALL USING (true) WITH CH
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 block mb-1.5">
+              <label className={`text-xs font-semibold uppercase tracking-wider block mb-1.5 ${labelColor}`}>
                 Ollama Base URL
               </label>
               <input
@@ -143,12 +150,12 @@ CREATE POLICY "Allow public read/write" ON projects FOR ALL USING (true) WITH CH
                 value={ollamaUrl}
                 onChange={(e) => setOllamaUrl(e.target.value)}
                 placeholder="http://localhost:11434"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:outline-none focus:border-purple-500"
+                className={`w-full px-3.5 py-2.5 rounded-xl border text-xs focus:outline-none focus:border-purple-500 ${inputBg}`}
               />
             </div>
 
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 block mb-1.5">
+              <label className={`text-xs font-semibold uppercase tracking-wider block mb-1.5 ${labelColor}`}>
                 Default Model Name
               </label>
               <input
@@ -156,18 +163,22 @@ CREATE POLICY "Allow public read/write" ON projects FOR ALL USING (true) WITH CH
                 value={ollamaModel}
                 onChange={(e) => setOllamaModel(e.target.value)}
                 placeholder="llama3.2, mistral, gemma2, etc."
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:outline-none focus:border-purple-500"
+                className={`w-full px-3.5 py-2.5 rounded-xl border text-xs focus:outline-none focus:border-purple-500 ${inputBg}`}
               />
             </div>
           </div>
 
           {/* Test Connection Button & Result */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-slate-800">
+          <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t ${isDark ? 'border-slate-800' : 'border-slate-200'}`}>
             <button
               type="button"
               onClick={handleTestOllama}
               disabled={testingOllama}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-purple-300 bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 transition-all self-start"
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold border transition-all self-start ${
+                isDark
+                  ? 'text-purple-300 bg-purple-500/15 hover:bg-purple-500/25 border-purple-500/30'
+                  : 'text-purple-700 bg-purple-100 hover:bg-purple-200 border-purple-300'
+              }`}
             >
               <RefreshCw className={`w-3.5 h-3.5 ${testingOllama ? 'animate-spin' : ''}`} />
               <span>{testingOllama ? 'Testing Connection...' : 'Test Ollama Connection'}</span>
@@ -176,12 +187,12 @@ CREATE POLICY "Allow public read/write" ON projects FOR ALL USING (true) WITH CH
             {testResult && (
               <div className="text-xs">
                 {testResult.status.online ? (
-                  <span className="text-emerald-400 font-semibold flex items-center gap-1.5">
+                  <span className="text-emerald-500 font-semibold flex items-center gap-1.5">
                     <CheckCircle2 className="w-4 h-4" />
                     Ollama v{testResult.status.version} detected! ({testResult.models?.length || 0} models installed)
                   </span>
                 ) : (
-                  <span className="text-amber-400 flex items-center gap-1.5">
+                  <span className="text-amber-500 flex items-center gap-1.5">
                     <AlertCircle className="w-4 h-4" />
                     {testResult.status.error} (Creative engine will use smart fallback)
                   </span>
@@ -191,30 +202,30 @@ CREATE POLICY "Allow public read/write" ON projects FOR ALL USING (true) WITH CH
           </div>
 
           {/* Quick Ollama CLI command callout */}
-          <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-900 text-xs space-y-1.5">
-            <div className="flex items-center gap-1.5 text-slate-400 font-bold uppercase text-[10px]">
-              <Terminal className="w-3.5 h-3.5 text-purple-400" />
+          <div className={`p-4 rounded-2xl border text-xs space-y-1.5 ${isDark ? 'bg-slate-950/80 border-slate-900' : 'bg-slate-50 border-slate-200'}`}>
+            <div className={`flex items-center gap-1.5 font-bold uppercase text-[10px] ${textMuted}`}>
+              <Terminal className="w-3.5 h-3.5 text-purple-500" />
               Quick Setup Command
             </div>
-            <p className="text-slate-400">
+            <p className={textMuted}>
               To download and launch the recommended local model on your system, run:
             </p>
-            <div className="p-2 rounded-lg bg-slate-900 font-mono text-purple-300 text-[11px] border border-slate-800">
+            <div className={`p-2 rounded-lg font-mono text-[11px] border ${isDark ? 'bg-slate-900 text-purple-300 border-slate-800' : 'bg-white text-purple-700 border-slate-200'}`}>
               ollama run llama3.2
             </div>
           </div>
         </div>
 
         {/* Supabase Cloud Persistence Section */}
-        <div className="p-6 md:p-8 rounded-3xl bg-[#0F1626] border border-slate-800 space-y-5 shadow-xl">
+        <div className={`p-6 md:p-8 rounded-3xl border space-y-5 shadow-xl ${cardBg} ${subCardBorder}`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">
+              <div className={`p-2.5 rounded-xl border ${isDark ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400' : 'bg-emerald-100 border-emerald-200 text-emerald-600'}`}>
                 <Database className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-white">Database & Supabase Sync</h2>
-                <p className="text-xs text-slate-400">
+                <h2 className={`text-lg font-bold ${textPrimary}`}>Database & Supabase Sync</h2>
+                <p className={`text-xs ${textMuted}`}>
                   Dual-tier persistence: Automatic local SQLite storage + optional Supabase cloud replication.
                 </p>
               </div>
@@ -223,8 +234,8 @@ CREATE POLICY "Allow public read/write" ON projects FOR ALL USING (true) WITH CH
             <span
               className={`text-xs px-2.5 py-1 rounded-full font-bold ${
                 settings?.supabase_configured
-                  ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
-                  : 'bg-slate-800 text-slate-400'
+                  ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                  : isDark ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-500'
               }`}
             >
               {settings?.supabase_configured ? 'Supabase Connected' : 'Local SQLite Active'}
@@ -233,7 +244,7 @@ CREATE POLICY "Allow public read/write" ON projects FOR ALL USING (true) WITH CH
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 block mb-1.5">
+              <label className={`text-xs font-semibold uppercase tracking-wider block mb-1.5 ${labelColor}`}>
                 Supabase Project URL
               </label>
               <input
@@ -241,12 +252,12 @@ CREATE POLICY "Allow public read/write" ON projects FOR ALL USING (true) WITH CH
                 value={supabaseUrl}
                 onChange={(e) => setSupabaseUrl(e.target.value)}
                 placeholder="https://xyzcompany.supabase.co"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:outline-none focus:border-purple-500"
+                className={`w-full px-3.5 py-2.5 rounded-xl border text-xs focus:outline-none focus:border-purple-500 ${inputBg}`}
               />
             </div>
 
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 block mb-1.5">
+              <label className={`text-xs font-semibold uppercase tracking-wider block mb-1.5 ${labelColor}`}>
                 Supabase Anon / Secret Key
               </label>
               <input
@@ -254,37 +265,37 @@ CREATE POLICY "Allow public read/write" ON projects FOR ALL USING (true) WITH CH
                 value={supabaseKey}
                 onChange={(e) => setSupabaseKey(e.target.value)}
                 placeholder="eyJhbGciOi..."
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:outline-none focus:border-purple-500"
+                className={`w-full px-3.5 py-2.5 rounded-xl border text-xs focus:outline-none focus:border-purple-500 ${inputBg}`}
               />
             </div>
           </div>
 
           {/* Copyable SQL Schema */}
-          <div className="space-y-2 pt-2 border-t border-slate-800">
+          <div className={`space-y-2 pt-2 border-t ${isDark ? 'border-slate-800' : 'border-slate-200'}`}>
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+              <span className={`text-xs font-bold uppercase tracking-wider ${textMuted}`}>
                 Supabase Table Schema (SQL)
               </span>
               <button
                 type="button"
                 onClick={handleCopySql}
-                className="flex items-center gap-1 text-xs text-purple-400 hover:text-purple-300"
+                className="flex items-center gap-1 text-xs text-purple-500 hover:text-purple-400"
               >
-                {copiedSql ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                {copiedSql ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
                 <span>{copiedSql ? 'Copied SQL' : 'Copy Schema'}</span>
               </button>
             </div>
-            <pre className="p-3 rounded-xl bg-slate-950 font-mono text-[11px] text-slate-400 border border-slate-900 overflow-x-auto">
+            <pre className={`p-3 rounded-xl font-mono text-[11px] border overflow-x-auto ${isDark ? 'bg-slate-950 text-slate-400 border-slate-900' : 'bg-slate-50 text-slate-700 border-slate-200'}`}>
               {sqlSchema}
             </pre>
           </div>
         </div>
 
         {/* Fallback & Hackathon Presentation Mode */}
-        <div className="p-6 rounded-2xl bg-[#0F1626] border border-slate-800 flex items-center justify-between">
+        <div className={`p-6 rounded-2xl border flex items-center justify-between ${cardBg} ${subCardBorder}`}>
           <div>
-            <h3 className="font-bold text-white text-sm">Resilient Creative Fallback Engine</h3>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <h3 className={`font-bold text-sm ${textPrimary}`}>Resilient Creative Fallback Engine</h3>
+            <p className={`text-xs mt-0.5 ${textMuted}`}>
               Automatically generates rich, structured creative scripts even when Ollama is offline or downloading models.
             </p>
           </div>
@@ -299,7 +310,7 @@ CREATE POLICY "Allow public read/write" ON projects FOR ALL USING (true) WITH CH
         {/* Save Bar */}
         <div className="flex items-center justify-between pt-4">
           {savedSuccess && (
-            <span className="text-xs font-semibold text-emerald-400 flex items-center gap-1.5 animate-fadeIn">
+            <span className="text-xs font-semibold text-emerald-500 flex items-center gap-1.5 animate-fadeIn">
               <CheckCircle2 className="w-4 h-4" />
               Settings updated successfully!
             </span>

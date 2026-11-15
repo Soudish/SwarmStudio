@@ -2,6 +2,21 @@ export type ProjectType = 'film' | 'game' | 'podcast';
 export type ProjectStatus = 'draft' | 'generating' | 'completed' | 'failed';
 export type AgentStatus = 'idle' | 'waiting' | 'running' | 'completed' | 'error';
 
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  avatar_url?: string;
+  created_at: string;
+  project_count: number;
+}
+
+export interface AuthResponse {
+  access_token: string;
+  token_type: string;
+  user: User;
+}
+
 export interface Character {
   name: string;
   role: string;
@@ -31,6 +46,7 @@ export interface ImagePrompt {
   negative_prompt?: string;
   aspect_ratio: string;
   style: string;
+  image_url?: string;
 }
 
 export interface SoundEffect {
@@ -93,6 +109,7 @@ export interface AgentActivity {
 
 export interface ProjectData {
   id: string;
+  user_id?: string;
   title: string;
   idea: string;
   project_type: ProjectType;

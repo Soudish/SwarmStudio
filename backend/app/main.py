@@ -1,7 +1,7 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
-from app.routers import projects, settings as settings_router, activity
+from app.routers import projects, settings as settings_router, activity, auth, media
 from app.services.websocket_manager import ws_manager
 from app.database import db_manager
 
@@ -21,9 +21,11 @@ app.add_middleware(
 )
 
 # Include routers
+app.include_router(auth.router)
 app.include_router(projects.router)
 app.include_router(settings_router.router)
 app.include_router(activity.router)
+app.include_router(media.router)
 
 @app.websocket("/ws/projects/{project_id}")
 async def websocket_project_endpoint(websocket: WebSocket, project_id: str):

@@ -113,6 +113,7 @@ class ProjectData(BaseModel):
     updated_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
     
     # Generated outputs
+    user_id: Optional[str] = None
     research: Optional[ResearchOutput] = None
     story: Optional[StoryOutput] = None
     visuals: Optional[VisualOutput] = None
@@ -140,3 +141,26 @@ class SettingsUpdate(BaseModel):
     supabase_url: Optional[str] = None
     supabase_key: Optional[str] = None
     demo_fallback_enabled: Optional[bool] = None
+
+class UserRegisterRequest(BaseModel):
+    name: str
+    email: str
+    password: str
+
+class UserLoginRequest(BaseModel):
+    email: str
+    password: str
+
+class UserResponse(BaseModel):
+    id: str
+    email: str
+    name: str
+    avatar_url: Optional[str] = None
+    created_at: str
+    project_count: int = 0
+
+class AuthResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserResponse
+
