@@ -21,11 +21,12 @@ import {
   Sliders,
   FileText,
   Loader2,
-  FileDown
+  FileDown,
+  X,
+  ArrowRight
 } from 'lucide-react';
 import { ProjectData } from '../../types';
 import { api } from '../../services/api';
-import { useTheme } from '../../contexts/ThemeContext';
 import { ConceptArtGallery } from './ConceptArtGallery';
 import { StudioAudioPlayer } from './StudioAudioPlayer';
 import { ExportModal } from './ExportModal';
@@ -44,7 +45,6 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
   onSelectTab,
   onRefreshProject,
 }) => {
-  const { isDark } = useTheme();
   const [activeDepartment, setActiveDepartment] = useState<
     'overview' | 'research' | 'story' | 'visuals' | 'audio' | 'critic'
   >('overview');
@@ -141,69 +141,84 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
   };
 
   const TypeIcon = project.project_type === 'film' ? Film : project.project_type === 'game' ? Gamepad2 : Mic;
+  const isGenerating = project.status === 'generating';
 
-  const cardBg = isDark ? 'bg-[#0F1626]' : 'bg-white';
-  const cardBorder = isDark ? 'border-slate-800' : 'border-slate-200 shadow-sm';
-  const textPrimary = isDark ? 'text-white' : 'text-slate-900';
-  const textSecondary = isDark ? 'text-slate-300' : 'text-slate-700';
-  const textMuted = isDark ? 'text-slate-400' : 'text-slate-500';
-  const quoteBg = isDark ? 'bg-slate-950 font-mono text-slate-300 border-slate-900' : 'bg-slate-50 font-mono text-slate-800 border-slate-200';
+  // Tasteful skeleton shimmer placeholder
+  const renderGeneratingSkeleton = (sectionName: string) => (
+    <div className="card p-8 text-center space-y-4">
+      <div className="flex items-center justify-center gap-2">
+        <span className="w-2.5 h-2.5 rounded-full bg-accent animate-ping" />
+        <span className="text-xs font-semibold text-text1">
+          {project.current_agent || 'Creative Agent'} is developing {sectionName}...
+        </span>
+      </div>
+      <p className="text-xs text-text3 max-w-md mx-auto">
+        Passing context from previous agents to synthesize coherent production deliverables.
+      </p>
+      <div className="max-w-md mx-auto space-y-2.5 pt-2">
+        <div className="h-4 bg-surface-muted rounded-full w-full animate-pulse" />
+        <div className="h-4 bg-surface-muted rounded-full w-4/5 mx-auto animate-pulse" />
+        <div className="h-4 bg-surface-muted rounded-full w-3/5 mx-auto animate-pulse" />
+      </div>
+    </div>
+  );
 
   return (
-    <div className="space-y-6 pb-20">
+    <div className="space-y-6 pb-20 max-w-[1100px] mx-auto">
       {/* Top Project Header Card */}
-      <div className={`p-6 md:p-8 rounded-3xl border shadow-xl relative ${cardBg} ${isDark ? 'border-purple-500/20' : 'border-purple-200 shadow-purple-100/50'}`}>
-        <div className="absolute inset-0 overflow-hidden rounded-3xl pointer-events-none">
-          <div className={`absolute top-0 right-0 w-80 h-80 rounded-full blur-3xl pointer-events-none ${isDark ? 'bg-purple-600/5' : 'bg-purple-200/20'}`} />
-        </div>
-
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
-          <div>
-            <div className="flex flex-wrap items-center gap-2 mb-3">
-              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${isDark ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'bg-purple-100 text-purple-700 border border-purple-200'}`}>
-                <TypeIcon className="w-3.5 h-3.5" />
-                {project.project_type.toUpperCase()}
+      <div className="card p-6 md:p-8 space-y-5">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="space-y-3">
+            {/* Metadata Pills */}
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="pill text-xs">
+                <TypeIcon className="w-3.5 h-3.5 text-text3" />
+                <span className="font-semibold uppercase tracking-wider">{project.project_type}</span>
               </span>
-              <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${isDark ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-600'}`}>
-                {project.genre}
-              </span>
-              <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${isDark ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-600'}`}>
-                Tone: {project.tone}
-              </span>
+              <span className="pill text-xs">{project.genre}</span>
+              <span className="pill text-xs">Tone: {project.tone}</span>
               <span
-                className={`text-xs px-2.5 py-1 rounded-full font-semibold ${
+                className={`pill text-xs font-medium ${
                   project.status === 'completed'
-                    ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                    : project.status === 'generating'
-                    ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30 animate-pulse'
-                    : isDark ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-500'
+                    ? 'pill-accent'
+                    : isGenerating
+                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
+                    : ''
                 }`}
               >
-                {project.status === 'completed' ? '✓ Ready & Approved' : `Swarm Active (${project.progress}%)`}
+                {project.status === 'completed' ? '✓ Ready' : `Swarm Active (${project.progress}%)`}
               </span>
             </div>
 
             {/* Editable Title */}
-            <div className="flex items-center gap-3">
+            <div>
               {isEditingTitle ? (
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
                     value={titleInput}
                     onChange={(e) => setTitleInput(e.target.value)}
-                    className={`px-3 py-1.5 rounded-lg border font-bold text-2xl focus:outline-none ${isDark ? 'bg-slate-900 border-purple-500 text-white' : 'bg-white border-purple-500 text-slate-900'}`}
+                    className="input font-bold text-xl md:text-2xl py-1.5"
                     autoFocus
                   />
                   <button
                     onClick={handleSaveTitle}
-                    className="p-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white"
+                    className="btn-primary py-2 px-3 text-xs"
+                    title="Save title"
                   >
                     <Save className="w-4 h-4" />
                   </button>
+                  <button
+                    onClick={() => setIsEditingTitle(false)}
+                    className="btn-ghost py-2 px-3 text-xs"
+                    title="Cancel edit"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
               ) : (
-                <div className="flex items-center gap-2">
-                  <h1 className={`text-2xl sm:text-3xl font-extrabold tracking-tight ${textPrimary}`}>
+                <div className="flex items-center gap-2.5">
+                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text1">
                     {project.title}
                   </h1>
                   <button
@@ -211,7 +226,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
                       setTitleInput(project.title);
                       setIsEditingTitle(true);
                     }}
-                    className={`p-1.5 rounded-lg transition-colors ${isDark ? 'text-slate-400 hover:text-white hover:bg-slate-800' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'}`}
+                    className="p-1.5 rounded-lg text-text3 hover:text-text1 hover:bg-surface-muted transition-colors"
                     title="Edit Title"
                   >
                     <Edit3 className="w-4 h-4" />
@@ -220,80 +235,72 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
               )}
             </div>
 
-            <p className={`text-xs sm:text-sm mt-2 max-w-2xl line-clamp-2 ${textMuted}`}>
-              <span className={`font-semibold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>Prompt:</span> {project.idea}
+            <p className="text-xs sm:text-sm text-text2 line-clamp-2 max-w-2xl leading-relaxed">
+              <span className="font-medium text-text1">Premise:</span> {project.idea}
             </p>
           </div>
 
           {/* Action Toolbar */}
-          <div className="flex flex-wrap items-center gap-2.5">
-            {/* View Live Activity */}
+          <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={() => onSelectTab('activity')}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold border transition-all ${
-                isDark ? 'text-slate-300 bg-slate-900 hover:bg-slate-800 border-slate-700/80' : 'text-slate-700 bg-slate-50 hover:bg-slate-100 border-slate-300'
-              }`}
+              className="btn-ghost text-xs"
+              title="Inspect agent telemetry"
             >
-              <Activity className="w-4 h-4 text-purple-500" />
+              <Activity className="w-3.5 h-3.5 text-text3" />
               <span>Live Activity</span>
             </button>
 
-            {/* Human in the loop revision */}
             <button
               onClick={() => setIsRegeneratingModalOpen(true)}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold border transition-all ${
-                isDark ? 'text-purple-300 bg-purple-500/15 hover:bg-purple-500/25 border-purple-500/40' : 'text-purple-700 bg-purple-100 hover:bg-purple-200 border-purple-300'
-              }`}
+              className="btn-ghost text-xs"
+              title="Targeted department revision"
             >
-              <RefreshCw className="w-4 h-4 text-purple-500" />
+              <RefreshCw className="w-3.5 h-3.5 text-text3" />
               <span>Regenerate Section</span>
             </button>
 
-            {/* Export Toolbar */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setIsExportModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-md shadow-purple-900/30 transition-all active:scale-95"
-                title="Open Export Package Modal"
-              >
-                <Download className="w-4 h-4" />
-                <span>Export Project</span>
-              </button>
+            <button
+              onClick={() => setIsExportModalOpen(true)}
+              className="btn-primary text-xs"
+              title="Open Export Package Modal"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Export Dossier</span>
+            </button>
 
-              <button
-                onClick={handleQuickDownloadPdf}
-                disabled={isQuickExportingPdf}
-                title="Instant 1-Click PDF Download"
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-all active:scale-95 ${
-                  isDark
-                    ? 'border-purple-500/30 text-purple-300 bg-purple-500/10 hover:bg-purple-500/20'
-                    : 'border-purple-200 text-purple-700 bg-purple-50 hover:bg-purple-100'
-                }`}
-              >
-                {isQuickExportingPdf ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin text-purple-400" />
-                ) : (
-                  <FileDown className="w-3.5 h-3.5" />
-                )}
-                <span className="hidden sm:inline">Quick PDF</span>
-              </button>
-            </div>
+            <button
+              onClick={handleQuickDownloadPdf}
+              disabled={isQuickExportingPdf}
+              className="btn-ghost text-xs"
+              title="Instant 1-Click PDF Download"
+            >
+              {isQuickExportingPdf ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <FileDown className="w-3.5 h-3.5 text-text3" />
+              )}
+              <span className="hidden sm:inline">Quick PDF</span>
+            </button>
           </div>
         </div>
 
-        {/* Progress bar if generating */}
-        {project.status === 'generating' && (
-          <div className={`mt-6 pt-4 border-t ${isDark ? 'border-slate-800/80' : 'border-slate-200'}`}>
-            <div className={`flex items-center justify-between text-xs mb-2 ${textMuted}`}>
+        {/* Progress Bar when Generating */}
+        {isGenerating && (
+          <div className="pt-4 border-t border-border space-y-2">
+            <div className="flex items-center justify-between text-xs text-text3">
               <span className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-                <span>Current Agent: <strong className="text-purple-400">{project.current_agent || 'Crew Orchestrator'}</strong></span>
+                <span className="w-2 h-2 rounded-full bg-accent animate-ping" />
+                <span>
+                  Current Agent:{' '}
+                  <strong className="text-text1">{project.current_agent || 'Swarm Orchestrator'}</strong>
+                </span>
               </span>
-              <span>{project.progress}%</span>
+              <span className="font-medium text-text1">{project.progress}%</span>
             </div>
-            <div className={`w-full h-2 rounded-full overflow-hidden ${isDark ? 'bg-slate-900' : 'bg-slate-200'}`}>
+            <div className="w-full bg-surface-muted rounded-full h-1.5 overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-purple-600 via-fuchsia-500 to-indigo-500 transition-all duration-500 rounded-full"
+                className="bg-accent h-1.5 rounded-full transition-all duration-300"
                 style={{ width: `${project.progress}%` }}
               />
             </div>
@@ -301,8 +308,8 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
         )}
       </div>
 
-      {/* Department Tabs Bar */}
-      <div className={`flex items-center space-x-2 overflow-x-auto pb-1 border-b ${isDark ? 'border-slate-800' : 'border-slate-200'}`}>
+      {/* Underlined Segmented Department Tabs */}
+      <div className="flex items-center gap-1 overflow-x-auto pb-1 border-b border-border scrollbar-none">
         {[
           { id: 'overview', label: 'Concept & Overview', icon: Sparkles },
           { id: 'research', label: 'World Lore & Characters', icon: Brain },
@@ -310,98 +317,116 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
           { id: 'visuals', label: 'Visual Art Direction', icon: Palette },
           { id: 'audio', label: 'Audio & Sound Atmosphere', icon: Headphones },
           { id: 'critic', label: 'Critic Audit & Review', icon: CheckCircle2 },
-        ].map(({ id, label, icon: Icon }) => (
-          <button
-            key={id}
-            onClick={() => setActiveDepartment(id as any)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all ${
-              activeDepartment === id
-                ? isDark
-                  ? 'bg-purple-600/20 text-purple-300 border border-purple-500/40 shadow-sm'
-                  : 'bg-purple-100 text-purple-700 border border-purple-300 font-bold shadow-sm'
-                : isDark
-                ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-            }`}
-          >
-            <Icon className="w-4 h-4" />
-            <span>{label}</span>
-          </button>
-        ))}
+        ].map(({ id, label, icon: Icon }) => {
+          const isActive = activeDepartment === id;
+          return (
+            <button
+              key={id}
+              onClick={() => setActiveDepartment(id as any)}
+              className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
+                isActive
+                  ? 'bg-accent-tint text-accent-text font-semibold'
+                  : 'text-text2 hover:text-text1 hover:bg-surface-muted'
+              }`}
+            >
+              <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-accent' : 'text-text3'}`} />
+              <span>{label}</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* DEPARTMENT CONTENT PANELS */}
 
-      {/* 1. OVERVIEW & LOGLINE */}
+      {/* 1. CONCEPT & OVERVIEW */}
       {activeDepartment === 'overview' && (
         <div className="space-y-6">
           {project.story ? (
             <>
-              {/* Logline Hero Box */}
-              <div className={`p-6 rounded-2xl border shadow-lg ${
-                isDark ? 'bg-gradient-to-br from-[#131B2E] to-[#0F1626] border-purple-500/30' : 'bg-gradient-to-br from-purple-50 to-white border-purple-200'
-              }`}>
-                <div className="text-xs font-bold uppercase tracking-wider text-purple-500 mb-2 flex items-center gap-1.5">
-                  <Sparkles className="w-4 h-4" />
-                  Official Project Logline
-                </div>
-                <blockquote className={`text-lg md:text-xl font-medium italic leading-relaxed ${textPrimary}`}>
+              {/* Editorial Logline Pull-Quote */}
+              <div className="card p-6 md:p-8 space-y-2">
+                <span className="label">Official Project Logline</span>
+                <blockquote className="text-xl md:text-2xl font-serif italic text-text1 leading-relaxed">
                   "{project.story.logline}"
                 </blockquote>
               </div>
 
-              {/* Synopsis & 3-Act Structure */}
+              {/* Synopsis & 3-Act Structure Grid */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className={`p-6 rounded-2xl border space-y-3 ${cardBg} ${cardBorder}`}>
-                  <h3 className={`font-bold text-base flex items-center gap-2 ${textPrimary}`}>
-                    <Feather className="w-4 h-4 text-purple-500" />
-                    Narrative Synopsis
-                  </h3>
-                  <p className={`text-xs sm:text-sm leading-relaxed whitespace-pre-line ${textSecondary}`}>
+                <div className="card p-6 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Feather className="w-4 h-4 text-accent" />
+                    <h3 className="text-sm font-semibold text-text1">Dramatic Synopsis</h3>
+                  </div>
+                  <p className="text-xs sm:text-sm text-text2 leading-relaxed whitespace-pre-line">
                     {project.story.synopsis}
                   </p>
                 </div>
 
-                <div className={`p-6 rounded-2xl border space-y-3 ${cardBg} ${cardBorder}`}>
-                  <h3 className={`font-bold text-base flex items-center gap-2 ${textPrimary}`}>
-                    <Clock className="w-4 h-4 text-indigo-500" />
-                    Three-Act Structure
-                  </h3>
-                  <div className={`text-xs sm:text-sm leading-relaxed whitespace-pre-line p-4 rounded-xl border ${quoteBg}`}>
+                <div className="card p-6 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-accent" />
+                    <h3 className="text-sm font-semibold text-text1">Three-Act Narrative Structure</h3>
+                  </div>
+                  <div className="card-muted p-4 text-xs font-mono text-text2 leading-relaxed whitespace-pre-line">
                     {project.story.three_act_structure}
                   </div>
                 </div>
               </div>
+
+              {/* Executive Critic Score Card */}
+              {project.critic && (
+                <div className="card-dark p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+                  <div className="space-y-1.5 text-center sm:text-left">
+                    <span className="pill text-xs bg-white/10 text-white/90 border-transparent">
+                      Continuity Verdict
+                    </span>
+                    <h3 className="text-xl font-bold text-white">{project.critic.verdict}</h3>
+                    <p className="text-xs text-white/70">
+                      Continuity: <strong className="text-white">{project.critic.continuity_status}</strong>
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col items-center justify-center p-4 rounded-2xl bg-white/10 border border-white/10 min-w-[120px] text-center">
+                    <span className="text-4xl font-extrabold text-white tracking-tight">
+                      {project.critic.score}
+                    </span>
+                    <span className="text-[10px] uppercase font-bold text-white/60 tracking-wider mt-0.5">
+                      Quality Index
+                    </span>
+                  </div>
+                </div>
+              )}
             </>
           ) : (
-            <div className={`p-12 text-center ${textMuted}`}>Story overview is generating...</div>
+            renderGeneratingSkeleton('Narrative Overview')
           )}
         </div>
       )}
 
-      {/* 2. RESEARCH & CHARACTERS */}
+      {/* 2. WORLD LORE & CHARACTERS */}
       {activeDepartment === 'research' && (
         <div className="space-y-6">
           {project.research ? (
             <>
               {/* World Building & Lore Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className={`p-6 rounded-2xl border space-y-2.5 ${cardBg} ${cardBorder}`}>
-                  <h3 className={`text-sm font-bold flex items-center gap-2 ${textPrimary}`}>
-                    <Brain className="w-4 h-4 text-blue-500" />
-                    World Setting & Environment
-                  </h3>
-                  <p className={`text-xs sm:text-sm leading-relaxed ${textSecondary}`}>
+                <div className="card p-6 space-y-2.5">
+                  <div className="flex items-center gap-2">
+                    <Brain className="w-4 h-4 text-accent" />
+                    <h3 className="text-sm font-semibold text-text1">World Setting & Environment</h3>
+                  </div>
+                  <p className="text-xs sm:text-sm text-text2 leading-relaxed">
                     {project.research.world_building}
                   </p>
                 </div>
 
-                <div className={`p-6 rounded-2xl border space-y-2.5 ${cardBg} ${cardBorder}`}>
-                  <h3 className={`text-sm font-bold flex items-center gap-2 ${textPrimary}`}>
-                    <Sliders className="w-4 h-4 text-cyan-500" />
-                    Governing Laws & Lore
-                  </h3>
-                  <p className={`text-xs sm:text-sm leading-relaxed ${textSecondary}`}>
+                <div className="card p-6 space-y-2.5">
+                  <div className="flex items-center gap-2">
+                    <Sliders className="w-4 h-4 text-accent" />
+                    <h3 className="text-sm font-semibold text-text1">Governing Laws & Lore</h3>
+                  </div>
+                  <p className="text-xs sm:text-sm text-text2 leading-relaxed">
                     {project.research.lore_and_rules}
                   </p>
                 </div>
@@ -409,49 +434,39 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
 
               {/* Characters Section */}
               <div className="space-y-4">
-                <h3 className={`text-lg font-bold tracking-tight flex items-center gap-2 ${textPrimary}`}>
-                  <span>Dramatis Personae & Characters</span>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${isDark ? 'bg-purple-500/20 text-purple-300' : 'bg-purple-100 text-purple-700'}`}>
-                    {project.research.characters.length} Roles
-                  </span>
-                </h3>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-base font-bold text-text1">Dramatis Personae & Characters</h3>
+                    <p className="text-xs text-text3">Key protagonist and secondary character profiles.</p>
+                  </div>
+                  <span className="pill text-xs">{project.research.characters.length} Roles</span>
+                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {project.research.characters.map((char, idx) => (
-                    <div
-                      key={idx}
-                      className={`p-5 rounded-2xl border transition-all flex flex-col justify-between ${cardBg} ${cardBorder}`}
-                    >
+                    <div key={idx} className="card p-5 flex flex-col justify-between space-y-3">
                       <div>
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs font-bold uppercase tracking-wider text-purple-500">
-                            {char.role}
-                          </span>
+                          <span className="label text-accent font-semibold">{char.role}</span>
                           {char.archetype && (
-                            <span className={`text-[11px] px-2 py-0.5 rounded-md ${isDark ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-700'}`}>
-                              {char.archetype}
-                            </span>
+                            <span className="pill text-[10px]">{char.archetype}</span>
                           )}
                         </div>
 
-                        <h4 className={`text-lg font-bold ${textPrimary}`}>{char.name}</h4>
+                        <div className="flex items-center gap-2.5 mb-2">
+                          <div className="w-8 h-8 rounded-full bg-accent-tint text-accent-text flex items-center justify-center font-bold text-xs shrink-0">
+                            {char.name.charAt(0).toUpperCase()}
+                          </div>
+                          <h4 className="text-base font-bold text-text1 truncate">{char.name}</h4>
+                        </div>
 
-                        <div className={`mt-3 space-y-2 text-xs ${textSecondary}`}>
-                          <div>
-                            <span className={`${textMuted} font-semibold`}>Appearance:</span> {char.appearance}
-                          </div>
-                          <div>
-                            <span className={`${textMuted} font-semibold`}>Personality:</span> {char.personality}
-                          </div>
-                          <div>
-                            <span className={`${textMuted} font-semibold`}>Background:</span> {char.background}
-                          </div>
-                          <div>
-                            <span className={`${textMuted} font-semibold`}>Core Desire:</span> {char.motivation}
-                          </div>
+                        <div className="space-y-2 text-xs text-text2">
+                          <p><strong className="text-text1">Appearance:</strong> {char.appearance}</p>
+                          <p><strong className="text-text1">Personality:</strong> {char.personality}</p>
+                          <p><strong className="text-text1">Motivation:</strong> {char.motivation}</p>
                           {char.character_arc && (
-                            <div className={`pt-2 border-t text-[11px] text-purple-500 ${isDark ? 'border-slate-800' : 'border-slate-200'}`}>
-                              <span className={`${textMuted} font-semibold`}>Arc:</span> {char.character_arc}
+                            <div className="pt-2 border-t border-border text-[11px] text-accent">
+                              <strong className="text-text3">Arc:</strong> {char.character_arc}
                             </div>
                           )}
                         </div>
@@ -462,74 +477,83 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
               </div>
             </>
           ) : (
-            <div className={`p-12 text-center ${textMuted}`}>World-building research is generating...</div>
+            renderGeneratingSkeleton('World Lore & Characters')
           )}
         </div>
       )}
 
-      {/* 3. SCREENPLAY & SCENE BREAKDOWN */}
+      {/* 3. SCREENPLAY & SCENES */}
       {activeDepartment === 'story' && (
         <div className="space-y-6">
           {project.story ? (
             <>
               {/* Screenplay Excerpt Treatment */}
-              <div className={`p-6 rounded-2xl border space-y-3 ${cardBg} ${cardBorder}`}>
+              <div className="card p-6 space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className={`font-bold text-base flex items-center gap-2 ${textPrimary}`}>
-                    <FileText className="w-4 h-4 text-purple-500" />
-                    Screenplay Treatment & Dialogue Excerpt
-                  </h3>
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-accent" />
+                    <h3 className="text-sm font-semibold text-text1">
+                      Screenplay Treatment & Dialogue Excerpt
+                    </h3>
+                  </div>
                   <button
                     onClick={() => handleCopy(project.story!.full_script_or_treatment, 'screenplay')}
-                    className="flex items-center gap-1.5 text-xs text-purple-500 hover:text-purple-400 font-semibold"
+                    className="flex items-center gap-1.5 text-xs text-accent font-medium hover:underline"
                   >
                     {copiedPromptId === 'screenplay' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                    <span>{copiedPromptId === 'screenplay' ? 'Copied' : 'Copy Excerpt'}</span>
+                    <span>{copiedPromptId === 'screenplay' ? 'Copied' : 'Copy Treatment'}</span>
                   </button>
                 </div>
-                <div className={`p-4 rounded-xl text-xs leading-relaxed whitespace-pre-wrap border max-h-64 overflow-y-auto ${quoteBg}`}>
+                <div className="card-muted p-4 text-xs font-mono text-text2 leading-relaxed whitespace-pre-wrap max-h-64 overflow-y-auto">
                   {project.story.full_script_or_treatment}
                 </div>
               </div>
 
-              {/* Scene Breakdown Cards */}
+              {/* Scene Breakdown Table / Cards */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className={`text-lg font-bold tracking-tight ${textPrimary}`}>
-                    Chronological Scene Breakdown ({project.story.scenes.length} Scenes)
-                  </h3>
-                  <span className={`text-xs ${textMuted}`}>Click edit to revise any scene</span>
+                  <div>
+                    <h3 className="text-base font-bold text-text1">
+                      Chronological Scene Breakdown ({project.story.scenes.length} Scenes)
+                    </h3>
+                    <p className="text-xs text-text3">
+                      Click the edit button on any scene to revise action or dialogue lines inline.
+                    </p>
+                  </div>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {project.story.scenes.map((scene, idx) => (
-                    <div
-                      key={idx}
-                      className={`p-6 rounded-2xl border transition-all space-y-3 ${cardBg} ${cardBorder}`}
-                    >
+                    <div key={idx} className="card p-5 space-y-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <span className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-sm ${
-                            isDark ? 'bg-purple-600/20 text-purple-300 border border-purple-500/30' : 'bg-purple-100 text-purple-700 border border-purple-200'
-                          }`}>
+                          <span className="w-7 h-7 rounded-lg bg-surface-muted text-text1 font-bold text-xs flex items-center justify-center border border-border">
                             {scene.scene_number}
                           </span>
                           <div>
-                            <h4 className={`font-bold text-base ${textPrimary}`}>{scene.title}</h4>
-                            <p className={`text-xs ${textMuted}`}>
-                              {scene.location} &bull; <span className="text-purple-500">{scene.time}</span>
+                            <h4 className="text-sm font-bold text-text1">{scene.title}</h4>
+                            <p className="text-xs text-text3">
+                              {scene.location} • <span className="text-accent">{scene.time}</span>
                             </p>
                           </div>
                         </div>
 
                         {editingSceneIdx === idx ? (
-                          <button
-                            onClick={() => handleSaveSceneEdit(idx)}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 text-white"
-                          >
-                            <Save className="w-3.5 h-3.5" />
-                            <span>Save Scene</span>
-                          </button>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={() => handleSaveSceneEdit(idx)}
+                              className="btn-primary py-1 px-3 text-xs"
+                            >
+                              <Save className="w-3.5 h-3.5" />
+                              <span>Save</span>
+                            </button>
+                            <button
+                              onClick={() => setEditingSceneIdx(null)}
+                              className="btn-ghost py-1 px-3 text-xs"
+                            >
+                              Cancel
+                            </button>
+                          </div>
                         ) : (
                           <button
                             onClick={() => {
@@ -537,7 +561,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
                               setEditedAction(scene.action);
                               setEditedDialogue(scene.dialogue || '');
                             }}
-                            className={`p-1.5 rounded-lg transition-colors ${isDark ? 'text-slate-400 hover:text-white hover:bg-slate-800' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'}`}
+                            className="p-1.5 rounded-lg text-text3 hover:text-text1 hover:bg-surface-muted transition-colors"
                             title="Edit Scene"
                           >
                             <Edit3 className="w-4 h-4" />
@@ -546,48 +570,48 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
                       </div>
 
                       {editingSceneIdx === idx ? (
-                        <div className="space-y-3 pt-2">
+                        <div className="space-y-3 pt-2 border-t border-border">
                           <div>
-                            <label className={`text-xs font-semibold block mb-1 ${textMuted}`}>Dramatic Action</label>
+                            <label className="label block mb-1">Dramatic Action</label>
                             <textarea
                               rows={3}
                               value={editedAction}
                               onChange={(e) => setEditedAction(e.target.value)}
-                              className={`w-full px-3 py-2 rounded-lg border text-xs ${isDark ? 'bg-slate-900 border-purple-500 text-white' : 'bg-white border-purple-500 text-slate-900'}`}
+                              className="input text-xs"
                             />
                           </div>
                           <div>
-                            <label className={`text-xs font-semibold block mb-1 ${textMuted}`}>Key Dialogue</label>
+                            <label className="label block mb-1">Key Dialogue Line</label>
                             <textarea
                               rows={2}
                               value={editedDialogue}
                               onChange={(e) => setEditedDialogue(e.target.value)}
-                              className={`w-full px-3 py-2 rounded-lg border text-xs font-mono ${isDark ? 'bg-slate-900 border-purple-500 text-white' : 'bg-white border-purple-500 text-slate-900'}`}
+                              className="input font-mono text-xs"
                             />
                           </div>
                         </div>
                       ) : (
                         <>
-                          <p className={`text-xs sm:text-sm leading-relaxed ${textSecondary}`}>
+                          <p className="text-xs sm:text-sm text-text2 leading-relaxed">
                             {scene.action}
                           </p>
 
                           {scene.dialogue && (
-                            <div className={`p-3 rounded-xl border font-mono text-xs ${isDark ? 'bg-slate-950/80 border-slate-900 text-purple-200' : 'bg-purple-50 border-purple-200 text-purple-800'}`}>
-                              <span className={`block text-[10px] uppercase font-bold mb-1 ${textMuted}`}>Dialogue Beat</span>
+                            <div className="card-muted p-3 text-xs font-mono text-text1">
+                              <span className="label block mb-1">Dialogue Beat</span>
                               {scene.dialogue}
                             </div>
                           )}
 
-                          <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-[11px] border-t ${isDark ? 'border-slate-800/60 text-slate-400' : 'border-slate-200 text-slate-500'}`}>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 text-[11px] text-text3 border-t border-border">
                             {scene.visual_cues && (
                               <div>
-                                <span className={`font-semibold ${textMuted}`}>Visual Cue:</span> {scene.visual_cues}
+                                <strong className="text-text2">Visual Cue:</strong> {scene.visual_cues}
                               </div>
                             )}
                             {scene.audio_cues && (
                               <div>
-                                <span className={`font-semibold ${textMuted}`}>Audio Cue:</span> {scene.audio_cues}
+                                <strong className="text-text2">Audio Cue:</strong> {scene.audio_cues}
                               </div>
                             )}
                           </div>
@@ -599,7 +623,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
               </div>
             </>
           ) : (
-            <div className={`p-12 text-center ${textMuted}`}>Screenplay is generating...</div>
+            renderGeneratingSkeleton('Screenplay & Scenes')
           )}
         </div>
       )}
@@ -611,18 +635,21 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
             <>
               {/* Art Direction Overview */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className={`p-6 rounded-2xl border space-y-2 md:col-span-2 ${cardBg} ${cardBorder}`}>
-                  <h3 className={`text-sm font-bold flex items-center gap-2 ${textPrimary}`}>
-                    <Palette className="w-4 h-4 text-amber-500" />
-                    Art Direction & Visual Philosophy
-                  </h3>
-                  <p className={`text-xs sm:text-sm leading-relaxed ${textSecondary}`}>
+                <div className="card p-6 space-y-2 md:col-span-2">
+                  <div className="flex items-center gap-2">
+                    <Palette className="w-4 h-4 text-accent" />
+                    <h3 className="text-sm font-semibold text-text1">
+                      Art Direction & Visual Philosophy
+                    </h3>
+                  </div>
+                  <p className="text-xs sm:text-sm text-text2 leading-relaxed">
                     {project.visuals.art_direction}
                   </p>
                 </div>
 
-                <div className={`p-6 rounded-2xl border space-y-3 ${cardBg} ${cardBorder}`}>
-                  <h3 className={`text-sm font-bold ${textPrimary}`}>Production Palette</h3>
+                {/* 5-Color Hex Production Palette */}
+                <div className="card p-6 space-y-3">
+                  <h3 className="text-sm font-semibold text-text1">Production Palette</h3>
                   <div className="space-y-2">
                     {project.visuals.color_palette.map((c, i) => {
                       const hexMatch = c.match(/#[0-9a-fA-F]{6}/);
@@ -631,18 +658,16 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
                         <div
                           key={i}
                           onClick={() => handleCopy(hex, hex, 'color')}
-                          className={`flex items-center justify-between p-2 rounded-xl border hover:border-purple-500/50 cursor-pointer transition-all ${
-                            isDark ? 'bg-slate-900 border-slate-800' : 'bg-slate-50 border-slate-200'
-                          }`}
+                          className="flex items-center justify-between p-2 rounded-xl border border-border bg-surface-muted hover:border-border-hover cursor-pointer transition-colors"
                         >
                           <div className="flex items-center gap-2.5">
                             <span
-                              className="w-5 h-5 rounded-md border border-white/20 shadow-sm"
+                              className="w-5 h-5 rounded-md border border-black/10 shrink-0"
                               style={{ backgroundColor: hex }}
                             />
-                            <span className={`text-xs font-medium ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{c}</span>
+                            <span className="text-xs font-mono text-text1">{c}</span>
                           </div>
-                          <span className="text-[10px] text-purple-500 font-bold">
+                          <span className="text-[10px] text-accent font-semibold">
                             {copiedColor === hex ? 'Copied' : 'Copy'}
                           </span>
                         </div>
@@ -654,17 +679,13 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
 
               {/* Lighting & Cinematography */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className={`p-5 rounded-2xl border ${cardBg} ${cardBorder}`}>
-                  <span className={`text-xs font-bold uppercase tracking-wider block mb-1 ${textMuted}`}>
-                    Lighting Style
-                  </span>
-                  <p className={`text-xs sm:text-sm ${textPrimary}`}>{project.visuals.lighting_style}</p>
+                <div className="card p-5 space-y-1">
+                  <span className="label">Lighting Setup</span>
+                  <p className="text-xs sm:text-sm text-text1">{project.visuals.lighting_style}</p>
                 </div>
-                <div className={`p-5 rounded-2xl border ${cardBg} ${cardBorder}`}>
-                  <span className={`text-xs font-bold uppercase tracking-wider block mb-1 ${textMuted}`}>
-                    Cinematography & Framing
-                  </span>
-                  <p className={`text-xs sm:text-sm ${textPrimary}`}>{project.visuals.cinematography_notes}</p>
+                <div className="card p-5 space-y-1">
+                  <span className="label">Cinematography & Framing</span>
+                  <p className="text-xs sm:text-sm text-text1">{project.visuals.cinematography_notes}</p>
                 </div>
               </div>
 
@@ -685,7 +706,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
               />
             </>
           ) : (
-            <div className={`p-12 text-center ${textMuted}`}>Visual direction is generating...</div>
+            renderGeneratingSkeleton('Visual Art Direction')
           )}
         </div>
       )}
@@ -709,22 +730,22 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
 
               {/* Music Score Direction */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className={`p-6 rounded-2xl border space-y-2 ${cardBg} ${cardBorder}`}>
-                  <h3 className={`text-sm font-bold flex items-center gap-2 ${textPrimary}`}>
-                    <Headphones className="w-4 h-4 text-emerald-500" />
-                    Soundtrack Direction & Philosophy
-                  </h3>
-                  <p className={`text-xs sm:text-sm leading-relaxed ${textSecondary}`}>
+                <div className="card p-6 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Headphones className="w-4 h-4 text-accent" />
+                    <h3 className="text-sm font-semibold text-text1">Soundtrack Direction</h3>
+                  </div>
+                  <p className="text-xs sm:text-sm text-text2 leading-relaxed">
                     {project.audio.music_score_direction}
                   </p>
                 </div>
 
-                <div className={`p-6 rounded-2xl border space-y-2 ${cardBg} ${cardBorder}`}>
-                  <h3 className={`text-sm font-bold flex items-center gap-2 ${textPrimary}`}>
-                    <Sliders className="w-4 h-4 text-teal-500" />
-                    Tempo & Instrumentation
-                  </h3>
-                  <p className={`text-xs sm:text-sm leading-relaxed ${textSecondary}`}>
+                <div className="card p-6 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Sliders className="w-4 h-4 text-accent" />
+                    <h3 className="text-sm font-semibold text-text1">Tempo & Instrumentation</h3>
+                  </div>
+                  <p className="text-xs sm:text-sm text-text2 leading-relaxed">
                     {project.audio.tempo_and_instruments}
                   </p>
                 </div>
@@ -732,20 +753,20 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
 
               {/* Soundtrack Tracks & Voice Casting */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className={`p-6 rounded-2xl border space-y-3 ${cardBg} ${cardBorder}`}>
-                  <h3 className={`text-sm font-bold ${textPrimary}`}>Thematic Soundtrack Tracks</h3>
-                  <div className="space-y-2">
+                <div className="card p-6 space-y-3">
+                  <h3 className="text-sm font-semibold text-text1">Thematic Production Tracks</h3>
+                  <div className="space-y-1.5">
                     {project.audio.soundtrack_tracks.map((t, idx) => (
-                      <div key={idx} className={`p-2.5 rounded-xl border text-xs ${isDark ? 'bg-slate-900 border-slate-800 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-700'}`}>
+                      <div key={idx} className="p-2 rounded-xl bg-surface-muted text-xs text-text2">
                         {t}
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div className={`p-6 rounded-2xl border space-y-2 ${cardBg} ${cardBorder}`}>
-                  <h3 className={`text-sm font-bold ${textPrimary}`}>Voice Casting & Delivery Direction</h3>
-                  <p className={`text-xs sm:text-sm leading-relaxed ${textSecondary}`}>
+                <div className="card p-6 space-y-2">
+                  <h3 className="text-sm font-semibold text-text1">Voice Casting & Delivery Direction</h3>
+                  <p className="text-xs sm:text-sm text-text2 leading-relaxed">
                     {project.audio.voice_casting_notes}
                   </p>
                 </div>
@@ -753,28 +774,29 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
 
               {/* Sound Effects Catalog */}
               <div className="space-y-4">
-                <h3 className={`text-lg font-bold tracking-tight ${textPrimary}`}>
-                  Sound Effects (SFX) & Foley Cues ({project.audio.sound_effects.length})
-                </h3>
+                <div>
+                  <h3 className="text-base font-bold text-text1">
+                    SFX & Foley Cues ({project.audio.sound_effects.length})
+                  </h3>
+                  <p className="text-xs text-text3">Scene-by-scene audio cues designed by the Audio Agent.</p>
+                </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {project.audio.sound_effects.map((sfx, idx) => (
-                    <div key={idx} className={`p-4 rounded-xl border space-y-2 ${cardBg} ${cardBorder}`}>
+                    <div key={idx} className="card p-4 space-y-1.5">
                       <div className="flex items-center justify-between">
-                        <span className={`font-bold text-sm ${textPrimary}`}>{sfx.name}</span>
-                        <span className={`text-[10px] px-2 py-0.5 rounded-md ${isDark ? 'bg-slate-800 text-purple-300' : 'bg-purple-100 text-purple-700'}`}>
-                          {sfx.category}
-                        </span>
+                        <span className="font-semibold text-xs text-text1">{sfx.name}</span>
+                        <span className="pill text-[10px]">{sfx.category}</span>
                       </div>
-                      <span className={`text-[11px] font-semibold block ${textMuted}`}>{sfx.scene_ref}</span>
-                      <p className={`text-xs leading-relaxed ${textSecondary}`}>{sfx.description}</p>
+                      <span className="text-[11px] text-accent font-medium block">{sfx.scene_ref}</span>
+                      <p className="text-xs text-text2 leading-relaxed">{sfx.description}</p>
                     </div>
                   ))}
                 </div>
               </div>
             </>
           ) : (
-            <div className={`p-12 text-center ${textMuted}`}>Audio design is generating...</div>
+            renderGeneratingSkeleton('Audio & Sound Design')
           )}
         </div>
       )}
@@ -785,31 +807,23 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
           {project.critic ? (
             <>
               {/* Score & Verdict Banner */}
-              <div className={`p-6 md:p-8 rounded-3xl border shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6 ${
-                isDark ? 'bg-gradient-to-br from-[#131B2E] via-[#0F1626] to-[#0A0E1A] border-purple-500/30' : 'bg-gradient-to-br from-purple-50 to-white border-purple-200'
-              }`}>
-                <div>
-                  <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold mb-3 ${
-                    isDark ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'bg-purple-100 text-purple-700 border border-purple-200'
-                  }`}>
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+              <div className="card-dark p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="space-y-2 text-center md:text-left">
+                  <span className="pill text-xs bg-white/10 text-white/90 border-transparent">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                     Critic Continuity Audit
-                  </div>
-                  <h3 className={`text-xl md:text-2xl font-extrabold ${textPrimary}`}>
-                    {project.critic.verdict}
-                  </h3>
-                  <p className={`text-xs sm:text-sm mt-1 ${textMuted}`}>
-                    Continuity Status: <strong className="text-purple-500">{project.critic.continuity_status}</strong>
+                  </span>
+                  <h3 className="text-xl md:text-2xl font-bold text-white">{project.critic.verdict}</h3>
+                  <p className="text-xs text-white/70">
+                    Continuity Status: <strong className="text-white">{project.critic.continuity_status}</strong>
                   </p>
                 </div>
 
-                <div className={`flex flex-col items-center justify-center p-5 rounded-2xl border text-center min-w-[140px] ${
-                  isDark ? 'bg-purple-600/10 border-purple-500/30' : 'bg-purple-50 border-purple-200'
-                }`}>
-                  <span className="text-4xl font-black bg-gradient-to-r from-purple-500 to-fuchsia-400 bg-clip-text text-transparent">
+                <div className="flex flex-col items-center justify-center p-5 rounded-2xl bg-white/10 border border-white/10 text-center min-w-[130px]">
+                  <span className="text-4xl font-extrabold text-white tracking-tight">
                     {project.critic.score}
                   </span>
-                  <span className={`text-xs uppercase tracking-wider font-bold mt-1 ${textMuted}`}>
+                  <span className="text-[10px] uppercase font-bold text-white/60 tracking-wider mt-1">
                     Quality Index / 100
                   </span>
                 </div>
@@ -818,31 +832,31 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
               {/* Strengths & Inconsistencies */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Strengths */}
-                <div className={`p-6 rounded-2xl border space-y-3 ${cardBg} ${cardBorder}`}>
-                  <h4 className="text-sm font-bold text-emerald-500 flex items-center gap-2">
+                <div className="card p-6 space-y-3">
+                  <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-semibold text-sm">
                     <CheckCircle2 className="w-4 h-4" />
-                    Standout Creative Strengths
-                  </h4>
-                  <ul className={`space-y-2.5 text-xs sm:text-sm ${textSecondary}`}>
+                    <h4>Standout Creative Strengths</h4>
+                  </div>
+                  <ul className="space-y-2 text-xs sm:text-sm text-text2">
                     {project.critic.strengths.map((str, idx) => (
                       <li key={idx} className="flex items-start gap-2">
-                        <span className="text-emerald-500 font-bold mt-0.5">&bull;</span>
+                        <span className="text-emerald-500 font-bold mt-0.5">•</span>
                         <span>{str}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
 
-                {/* Inconsistencies */}
-                <div className={`p-6 rounded-2xl border space-y-3 ${cardBg} ${cardBorder}`}>
-                  <h4 className="text-sm font-bold text-amber-500 flex items-center gap-2">
+                {/* Flagged Inconsistencies */}
+                <div className="card p-6 space-y-3">
+                  <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-semibold text-sm">
                     <AlertCircle className="w-4 h-4" />
-                    Flagged Continuity Nuances
-                  </h4>
-                  <ul className={`space-y-2.5 text-xs sm:text-sm ${textSecondary}`}>
+                    <h4>Flagged Continuity Nuances</h4>
+                  </div>
+                  <ul className="space-y-2 text-xs sm:text-sm text-text2">
                     {project.critic.inconsistencies.map((inc, idx) => (
                       <li key={idx} className="flex items-start gap-2">
-                        <span className="text-amber-500 font-bold mt-0.5">&bull;</span>
+                        <span className="text-amber-500 font-bold mt-0.5">•</span>
                         <span>{inc}</span>
                       </li>
                     ))}
@@ -850,49 +864,48 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
                 </div>
               </div>
 
-              {/* Recommendations */}
-              <div className={`p-6 rounded-2xl border space-y-3 ${cardBg} ${cardBorder}`}>
-                <h4 className="text-sm font-bold text-purple-500 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4" />
-                  Actionable Editorial Revisions
-                </h4>
+              {/* Editorial Recommendations */}
+              <div className="card p-6 space-y-3">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-accent" />
+                  <h4 className="text-sm font-semibold text-text1">Actionable Editorial Revisions</h4>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   {project.critic.suggestions_for_improvement.map((sug, idx) => (
-                    <div key={idx} className={`p-3.5 rounded-xl border text-xs leading-relaxed ${isDark ? 'bg-slate-900 border-slate-800 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-700'}`}>
-                      <span className="font-bold text-purple-500 block mb-1">Recommendation #{idx + 1}</span>
-                      {sug}
+                    <div key={idx} className="card-muted p-4 space-y-1">
+                      <span className="label block text-accent">Revision #{idx + 1}</span>
+                      <p className="text-xs text-text2 leading-relaxed">{sug}</p>
                     </div>
                   ))}
                 </div>
               </div>
             </>
           ) : (
-            <div className={`p-12 text-center ${textMuted}`}>Critic audit is generating...</div>
+            renderGeneratingSkeleton('Critic Audit & Quality Review')
           )}
         </div>
       )}
 
       {/* HUMAN IN THE LOOP: REGENERATE SECTION MODAL */}
       {isRegeneratingModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-          <div className={`w-full max-w-lg border rounded-2xl p-6 space-y-5 shadow-2xl ${cardBg} ${isDark ? 'border-purple-500/30' : 'border-purple-200'}`}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="card p-6 space-y-5 max-w-lg w-full shadow-md">
             <div className="flex items-center justify-between">
-              <h3 className={`text-lg font-bold flex items-center gap-2 ${textPrimary}`}>
-                <RefreshCw className="w-5 h-5 text-purple-500" />
-                Regenerate Department Section
-              </h3>
+              <div className="flex items-center gap-2">
+                <RefreshCw className="w-4 h-4 text-accent" />
+                <h3 className="text-base font-bold text-text1">Regenerate Department Section</h3>
+              </div>
               <button
                 onClick={() => setIsRegeneratingModalOpen(false)}
-                className={`${textMuted} hover:${textPrimary}`}
+                className="p-1 rounded-lg text-text3 hover:text-text1 hover:bg-surface-muted"
+                aria-label="Close"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
             <div>
-              <label className={`text-xs font-semibold uppercase tracking-wider block mb-2 ${textMuted}`}>
-                Target Department
-              </label>
+              <label className="label block mb-2">Target Department</label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
                 {[
                   { key: 'story', label: 'Screenplay & Scenes' },
@@ -900,43 +913,42 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
                   { key: 'visuals', label: 'Visual Art Direction' },
                   { key: 'audio', label: 'Audio & Music' },
                   { key: 'critic', label: 'Critic Quality Audit' },
-                ].map(({ key, label }) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => setRegenSection(key as any)}
-                    className={`p-2.5 rounded-xl border text-left transition-all ${
-                      regenSection === key
-                        ? 'bg-purple-600/20 border-purple-500 text-purple-500 font-bold'
-                        : isDark ? 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white' : 'bg-slate-50 border-slate-200 text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
+                ].map(({ key, label }) => {
+                  const isActive = regenSection === key;
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setRegenSection(key as any)}
+                      className={`p-2.5 rounded-xl border text-left transition-all ${
+                        isActive
+                          ? 'bg-accent-tint text-accent-text border-accent font-semibold'
+                          : 'border-border bg-surface-muted text-text2 hover:text-text1'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
             <div>
-              <label className={`text-xs font-semibold uppercase tracking-wider block mb-1.5 ${textMuted}`}>
-                Creative Revision Directives (Feedback)
-              </label>
+              <label className="label block mb-1.5">Creative Revision Directives</label>
               <textarea
                 rows={3}
                 placeholder="e.g. 'Make the ending more bittersweet', 'Emphasize neon noir visuals', 'Add a haunting violin motif'..."
                 value={regenInstructions}
                 onChange={(e) => setRegenInstructions(e.target.value)}
-                className={`w-full px-3.5 py-2.5 rounded-xl border text-xs focus:outline-none focus:border-purple-500 resize-none ${
-                  isDark ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
-                }`}
+                className="input text-xs resize-none"
               />
             </div>
 
-            <div className={`flex items-center justify-end gap-3 pt-3 border-t ${isDark ? 'border-slate-800' : 'border-slate-200'}`}>
+            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-border">
               <button
                 type="button"
                 onClick={() => setIsRegeneratingModalOpen(false)}
-                className={`px-4 py-2 rounded-xl text-xs font-semibold transition-colors ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'}`}
+                className="btn-ghost text-xs"
               >
                 Cancel
               </button>
@@ -944,9 +956,19 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
                 type="button"
                 onClick={handleTriggerRegeneration}
                 disabled={isRegenerating}
-                className="flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold text-white bg-purple-600 hover:bg-purple-500 transition-all"
+                className="btn-primary text-xs"
               >
-                {isRegenerating ? 'Deploying Agent...' : 'Submit & Regenerate'}
+                {isRegenerating ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Deploying Agent...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Submit & Regenerate</span>
+                    <ArrowRight className="w-3 h-3" />
+                  </>
+                )}
               </button>
             </div>
           </div>

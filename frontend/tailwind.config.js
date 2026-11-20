@@ -8,43 +8,64 @@ export default {
   theme: {
     extend: {
       colors: {
-        background: {
-          DEFAULT: '#090D16',
-          secondary: '#0F1626',
-          card: '#131B2E',
-          surface: '#1A233A',
-          hover: '#24304E',
+        bg: 'var(--bg)',
+        surface: {
+          DEFAULT: 'var(--surface)',
+          muted: 'var(--surface-muted)',
         },
-        brand: {
-          50: '#FAF5FF',
-          100: '#F3E8FF',
-          200: '#E9D5FF',
-          300: '#D8B4FE',
-          400: '#C084FC',
-          500: '#A855F7',
-          600: '#9333EA',
-          700: '#7E22CE',
-          800: '#6B21A8',
-          900: '#581C87',
+        border: {
+          DEFAULT: 'var(--border)',
+          hover: 'var(--border-hover)',
         },
+        text1: 'var(--text-1)',
+        text2: 'var(--text-2)',
+        text3: 'var(--text-3)',
         accent: {
-          cyan: '#06B6D4',
-          fuchsia: '#D946EF',
-          emerald: '#10B981',
-          amber: '#F59E0B',
-          rose: '#F43F5E',
-        }
+          DEFAULT: 'var(--accent)',
+          tint: 'var(--accent-tint)',
+          text: 'var(--accent-text)',
+        },
+        'hero-dark': 'var(--hero-dark)',
+        agent: {
+          research: '#06B6D4',
+          story: '#D946EF',
+          visual: '#F59E0B',
+          audio: '#10B981',
+          critic: '#6366F1',
+        },
+      },
+      borderRadius: {
+        card: '20px',
+        hero: '28px',
+        btn: '9999px',
+        input: '12px',
+      },
+      boxShadow: {
+        sm: 'var(--shadow-sm)',
+        md: 'var(--shadow-md)',
+      },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'monospace'],
+      },
+      letterSpacing: {
+        tight: '-0.03em',
+        label: '0.08em',
       },
       animation: {
-        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-        'glow': 'glow 2s ease-in-out infinite alternate',
+        'fade-in': 'fadeIn 0.2s ease-out',
+        'shimmer': 'shimmer 2s infinite linear',
       },
       keyframes: {
-        glow: {
-          '0%': { boxShadow: '0 0 15px rgba(168, 85, 247, 0.35)' },
-          '100%': { boxShadow: '0 0 30px rgba(168, 85, 247, 0.75)' },
-        }
-      }
+        fadeIn: {
+          '0%': { opacity: '0', transform: 'translateY(4px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        shimmer: {
+          '0%': { backgroundPosition: '-200% 0' },
+          '100%': { backgroundPosition: '200% 0' },
+        },
+      },
     },
   },
   plugins: [],

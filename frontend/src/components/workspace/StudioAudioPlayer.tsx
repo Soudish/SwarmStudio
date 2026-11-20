@@ -5,14 +5,12 @@ import {
   Volume2,
   VolumeX,
   Headphones,
-  Sliders,
-  Sparkles,
-  Radio,
   Music2,
   Disc,
   Download,
-  RefreshCw,
-  Wand2
+  Wand2,
+  Radio,
+  Loader2
 } from 'lucide-react';
 import { dynamicAudioSynthesizer } from '../../services/audioSynthesizer';
 import { SoundEffect } from '../../types';
@@ -72,7 +70,6 @@ export const StudioAudioPlayer: React.FC<StudioAudioPlayerProps> = ({
       dynamicAudioSynthesizer.stop();
       setIsPlayingSynth(false);
     } else {
-      // Pause HTML audio if playing
       if (htmlAudioRef.current && !htmlAudioRef.current.paused) {
         htmlAudioRef.current.pause();
       }
@@ -97,7 +94,6 @@ export const StudioAudioPlayer: React.FC<StudioAudioPlayerProps> = ({
 
       setGeneratedAudioMap((prev) => ({ ...prev, [activeTrackIndex]: audioUrl }));
 
-      // Automatically play the rendered audio
       if (isPlayingSynth) {
         dynamicAudioSynthesizer.stop();
         setIsPlayingSynth(false);
@@ -169,10 +165,10 @@ export const StudioAudioPlayer: React.FC<StudioAudioPlayerProps> = ({
         for (let i = 0; i < bufferLength; i++) {
           const barHeight = (dataArray[i] / 255) * height;
 
+          // Single clean accent gradient in lavender
           const gradient = ctx.createLinearGradient(0, height, 0, 0);
-          gradient.addColorStop(0, '#7E22CE');
-          gradient.addColorStop(0.5, '#A855F7');
-          gradient.addColorStop(1, '#06B6D4');
+          gradient.addColorStop(0, isDark ? '#4A3BA8' : '#8B7FE8');
+          gradient.addColorStop(1, isDark ? '#8B7FE8' : '#6D5BD0');
 
           ctx.fillStyle = gradient;
           ctx.beginPath();
@@ -182,13 +178,13 @@ export const StudioAudioPlayer: React.FC<StudioAudioPlayerProps> = ({
           x += barWidth;
         }
       } else {
-        ctx.strokeStyle = isDark ? 'rgba(168, 85, 247, 0.2)' : 'rgba(168, 85, 247, 0.3)';
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(10, 10, 11, 0.1)';
+        ctx.lineWidth = 1.5;
         ctx.beginPath();
         const sliceWidth = width / 30;
         let x = 0;
         for (let i = 0; i < 30; i++) {
-          const y = height / 2 + Math.sin(i * 0.3) * 4;
+          const y = height / 2 + Math.sin(i * 0.3) * 3;
           if (i === 0) ctx.moveTo(x, y);
           else ctx.lineTo(x, y);
           x += sliceWidth;
@@ -210,64 +206,62 @@ export const StudioAudioPlayer: React.FC<StudioAudioPlayerProps> = ({
     };
   }, []);
 
-  const cardBg = isDark ? 'bg-[#0F1626]' : 'bg-white';
-  const cardBorder = isDark ? 'border-purple-500/25 shadow-purple-950/40' : 'border-purple-200 shadow-md';
-  const textPrimary = isDark ? 'text-white' : 'text-slate-900';
-  const textMuted = isDark ? 'text-slate-400' : 'text-slate-500';
-
   const currentGeneratedAudio = generatedAudioMap[activeTrackIndex];
 
   return (
-    <div className={`p-6 rounded-3xl border shadow-xl space-y-6 ${cardBg} ${cardBorder}`}>
+    <div className="card p-6 space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="p-3 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-600/20">
-            <Headphones className="w-6 h-6" />
+          <div className="w-10 h-10 rounded-full bg-accent-tint text-accent-text flex items-center justify-center shrink-0">
+            <Headphones className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className={`text-lg font-bold tracking-tight ${textPrimary}`}>
-                Meta MusicGen Soundtrack & Audio Engine
-              </h3>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                AI Audio Active
-              </span>
+              <h3 className="text-base font-bold text-text1">Soundtrack & Audio Studio</h3>
+              <span className="pill text-[10px] pill-accent">Active Audio Engine</span>
             </div>
-            <p className={`text-xs mt-0.5 ${textMuted}`}>
-              Full audio generation pipeline: synthesize ambient streams or render master 16-bit .WAV tracks.
+            <p className="text-xs text-text3 mt-0.5">
+              Harmonic atmosphere synthesis and 16-bit stereo master track rendering.
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div>
           <button
             onClick={handleGenerateRealAudio}
             disabled={isGeneratingAudio}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-md shadow-emerald-900/30 transition-all disabled:opacity-50"
+            className="btn-primary text-xs disabled:opacity-50"
           >
-            <Wand2 className={`w-3.5 h-3.5 ${isGeneratingAudio ? 'animate-spin' : ''}`} />
-            <span>{isGeneratingAudio ? 'Synthesizing Track...' : 'Generate .WAV Track'}</span>
+            {isGeneratingAudio ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <span>Synthesizing...</span>
+              </>
+            ) : (
+              <>
+                <Wand2 className="w-3.5 h-3.5" />
+                <span>Generate .WAV Track</span>
+              </>
+            )}
           </button>
         </div>
       </div>
 
-      {/* Real Generated HTML5 Audio Player Card (If rendered) */}
+      {/* Rendered HTML5 Audio Player Card (If rendered) */}
       {currentGeneratedAudio && (
-        <div className={`p-4 rounded-2xl border space-y-2 ${
-          isDark ? 'bg-purple-950/20 border-purple-500/30' : 'bg-purple-50 border-purple-200'
-        }`}>
+        <div className="card-muted p-4 space-y-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Music2 className="w-4 h-4 text-purple-500" />
-              <span className={`text-xs font-bold ${textPrimary}`}>
-                Rendered Audio: <strong className="text-purple-400">{currentTrackName}</strong>
+              <Music2 className="w-4 h-4 text-accent" />
+              <span className="text-xs font-semibold text-text1">
+                Rendered Track: <strong className="text-accent">{currentTrackName}</strong>
               </span>
             </div>
             <a
               href={currentGeneratedAudio}
               download={`${currentTrackName.toLowerCase().replace(/\s+/g, '-')}.wav`}
-              className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold bg-purple-600 hover:bg-purple-500 text-white transition-all shadow-sm"
+              className="btn-ghost py-1 px-2.5 text-xs font-medium"
             >
               <Download className="w-3.5 h-3.5" />
               <span>Download .WAV</span>
@@ -277,15 +271,13 @@ export const StudioAudioPlayer: React.FC<StudioAudioPlayerProps> = ({
             ref={htmlAudioRef}
             src={currentGeneratedAudio}
             controls
-            className="w-full h-10 rounded-xl"
+            className="w-full h-9 rounded-xl"
           />
         </div>
       )}
 
       {/* Visualizer Canvas & In-Browser Procedural Synthesizer */}
-      <div className={`p-4 rounded-2xl border space-y-4 ${
-        isDark ? 'bg-slate-950 border-slate-900' : 'bg-slate-50 border-slate-200'
-      }`}>
+      <div className="card-muted p-4 space-y-4">
         <div className="h-14 w-full flex items-center justify-center overflow-hidden">
           <canvas
             ref={canvasRef}
@@ -296,25 +288,23 @@ export const StudioAudioPlayer: React.FC<StudioAudioPlayerProps> = ({
         </div>
 
         {/* Playback & Volume Control Toolbar */}
-        <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-slate-800/40">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-border">
+          <div className="flex items-center gap-2">
             <button
               onClick={handleToggleSynthPlay}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs text-white transition-all shadow-md ${
-                isPlayingSynth
-                  ? 'bg-rose-600 hover:bg-rose-500 shadow-rose-900/30'
-                  : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-purple-900/30'
+              className={`btn-primary text-xs ${
+                isPlayingSynth ? 'bg-rose-600 hover:bg-rose-500 text-white' : ''
               }`}
             >
               {isPlayingSynth ? (
                 <>
-                  <Square className="w-4 h-4 fill-white" />
+                  <Square className="w-3.5 h-3.5 fill-current" />
                   <span>Stop Stream</span>
                 </>
               ) : (
                 <>
-                  <Play className="w-4 h-4 fill-white" />
-                  <span>Stream Atmosphere: {currentTrackName}</span>
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  <span>Play Stream: {currentTrackName}</span>
                 </>
               )}
             </button>
@@ -324,7 +314,8 @@ export const StudioAudioPlayer: React.FC<StudioAudioPlayerProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={handleToggleMute}
-              className={`p-1.5 rounded-lg ${textMuted} hover:${textPrimary}`}
+              className="p-1 rounded-lg text-text3 hover:text-text1 transition-colors"
+              aria-label="Toggle mute"
             >
               {isMuted || volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
             </button>
@@ -335,82 +326,75 @@ export const StudioAudioPlayer: React.FC<StudioAudioPlayerProps> = ({
               step="0.05"
               value={isMuted ? 0 : volume}
               onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
-              className="w-20 sm:w-28 accent-purple-600 cursor-pointer h-1.5 rounded-lg bg-slate-700"
+              className="w-20 sm:w-28 accent-accent cursor-pointer h-1 rounded-lg bg-border"
             />
           </div>
         </div>
 
         {/* Project Specific Soundtrack Tracks */}
         {tracks.length > 0 && (
-          <div className="pt-2 border-t border-slate-800/40">
-            <span className={`text-[11px] font-bold uppercase tracking-wider block mb-2 ${textMuted}`}>
-              Project Production Tracks:
-            </span>
-            <div className="flex flex-wrap gap-2">
-              {tracks.map((t, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => handleSelectTrack(idx)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-                    activeTrackIndex === idx
-                      ? 'bg-purple-600 text-white shadow-md'
-                      : isDark
-                      ? 'bg-slate-900 text-slate-300 hover:text-white border border-slate-800'
-                      : 'bg-white text-slate-700 hover:text-slate-900 border border-slate-200'
-                  }`}
-                >
-                  <Disc className={`w-3.5 h-3.5 ${activeTrackIndex === idx && isPlayingSynth ? 'animate-spin text-purple-200' : 'text-purple-400'}`} />
-                  <span>{t}</span>
-                  {generatedAudioMap[idx] && (
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 ml-1" title="Rendered WAV Ready" />
-                  )}
-                </button>
-              ))}
+          <div className="pt-2 border-t border-border">
+            <span className="label block mb-2">Soundtrack Stems</span>
+            <div className="flex flex-wrap gap-1.5">
+              {tracks.map((t, idx) => {
+                const isSelected = activeTrackIndex === idx;
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => handleSelectTrack(idx)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
+                      isSelected
+                        ? 'bg-accent-tint text-accent-text font-semibold'
+                        : 'card bg-surface text-text2 hover:text-text1'
+                    }`}
+                  >
+                    <Disc className={`w-3.5 h-3.5 ${isSelected && isPlayingSynth ? 'animate-spin text-accent' : 'text-text3'}`} />
+                    <span>{t}</span>
+                    {generatedAudioMap[idx] && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 ml-0.5" title="Rendered WAV ready" />
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
       </div>
 
-      {/* Interactive Story-Specific SFX Soundboard */}
+      {/* Interactive SFX Soundboard */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <span className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 ${textMuted}`}>
-            <Radio className="w-3.5 h-3.5 text-purple-500" />
-            <span>Interactive Scene SFX & Foley Soundboard ({soundEffects.length} Cues)</span>
-          </span>
-          <span className="text-[11px] text-purple-500 font-semibold">Click any effect to synthesize Foley cue</span>
+          <div className="flex items-center gap-2">
+            <Radio className="w-3.5 h-3.5 text-text3" />
+            <span className="label">Scene Foley & SFX Cues ({soundEffects.length})</span>
+          </div>
+          <span className="text-[11px] text-text3">Click to synthesize cue</span>
         </div>
 
         {soundEffects.length === 0 ? (
-          <div className={`p-6 text-center text-xs rounded-xl border border-dashed ${textMuted} ${cardBorder}`}>
+          <div className="card-muted p-6 text-center text-xs text-text3 border-dashed">
             No sound effect cues generated yet for this project.
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
             {soundEffects.map((sfx, idx) => {
               const isActive = activeSFXName === sfx.name;
               return (
                 <button
                   key={idx}
                   onClick={() => handleTriggerSFX(sfx)}
-                  className={`p-3.5 rounded-2xl border text-left transition-all relative overflow-hidden group ${
+                  className={`p-3 rounded-xl border text-left transition-all ${
                     isActive
-                      ? 'border-purple-400 bg-purple-600/20 scale-[0.98]'
-                      : isDark
-                      ? 'bg-slate-900/60 border-slate-800 hover:border-purple-500/40 hover:bg-slate-900'
-                      : 'bg-slate-50 border-slate-200 hover:border-purple-300 hover:bg-purple-50/40'
+                      ? 'border-accent bg-accent-tint scale-[0.99]'
+                      : 'border-border bg-surface hover:border-border-hover hover:bg-surface-muted'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-1">
-                    <span className={`font-bold text-xs truncate max-w-[180px] ${textPrimary}`}>{sfx.name}</span>
-                    <span className={`text-[10px] px-1.5 py-0.2 rounded-md ${
-                      isDark ? 'bg-purple-500/20 text-purple-300' : 'bg-purple-100 text-purple-700'
-                    }`}>
-                      {sfx.category}
-                    </span>
+                    <span className="font-semibold text-xs text-text1 truncate max-w-[170px]">{sfx.name}</span>
+                    <span className="pill text-[9px] py-0 px-1.5">{sfx.category}</span>
                   </div>
-                  <div className="text-[10px] text-purple-400 font-semibold mb-1">{sfx.scene_ref}</div>
-                  <p className={`text-[11px] leading-tight line-clamp-2 ${textMuted}`}>{sfx.description}</p>
+                  <div className="text-[10px] text-accent font-medium mb-1">{sfx.scene_ref}</div>
+                  <p className="text-[11px] text-text3 leading-tight line-clamp-2">{sfx.description}</p>
                 </button>
               );
             })}

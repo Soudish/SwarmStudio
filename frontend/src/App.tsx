@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Navbar } from './components/layout/Navbar';
+import { Navbar, Topbar } from './components/layout/Navbar';
 import { Dashboard } from './components/dashboard/Dashboard';
 import { ProjectWorkspace } from './components/workspace/ProjectWorkspace';
 import { AgentActivityView } from './components/activity/AgentActivityView';
@@ -206,14 +206,8 @@ export const App: React.FC = () => {
   }
 
   return (
-    <div
-      className={`min-h-screen flex flex-col theme-transition ${
-        isDark
-          ? 'bg-[#090D16] text-slate-100 selection:bg-purple-600 selection:text-white'
-          : 'bg-[#F8FAFC] text-slate-900 selection:bg-purple-500 selection:text-white'
-      }`}
-    >
-      {/* Top Navigation */}
+    <div className="min-h-screen flex flex-col md:flex-row bg-bg text-text1 selection:bg-accent-tint selection:text-accent-text theme-transition">
+      {/* Sidebar Shell */}
       <Navbar
         currentTab={currentTab}
         onSelectTab={setCurrentTab}
@@ -226,61 +220,63 @@ export const App: React.FC = () => {
         onGoToLanding={() => setCurrentView('landing')}
       />
 
-      {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-8">
-        {loading ? (
-          <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
-            <div className="w-10 h-10 border-4 border-purple-500/20 border-t-purple-500 rounded-full animate-spin" />
-            <p className={`text-xs font-semibold tracking-wide uppercase ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-              Initializing SwarmStudio Workspace...
-            </p>
-          </div>
-        ) : (
-          <>
-            {currentTab === 'dashboard' && (
-              <Dashboard
-                projects={projects}
-                onOpenCreateModal={() => setIsCreateModalOpen(true)}
-                onSelectProject={handleSelectProject}
-                onSelectTab={setCurrentTab}
-                settings={settings}
-              />
-            )}
+      {/* Main Container Area */}
+      <div className="flex-1 flex flex-col min-w-0">
+        <Topbar
+          currentTab={currentTab}
+          activeProject={activeProject}
+          settings={settings}
+          onOpenCreateModal={() => setIsCreateModalOpen(true)}
+        />
 
-            {currentTab === 'workspace' && (
-              activeProject ? (
-                <ProjectWorkspace
-                  project={activeProject}
-                  onUpdateProject={(updated) => {
-                    setActiveProject(updated);
-                    setProjects((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
-                  }}
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
+              <div className="w-8 h-8 border-2 border-border border-t-accent rounded-full animate-spin" />
+              <p className="text-xs font-medium text-text3 tracking-wider uppercase">
+                Initializing SwarmStudio Workspace...
+              </p>
+            </div>
+          ) : (
+            <>
+              {currentTab === 'dashboard' && (
+                <Dashboard
+                  projects={projects}
+                  onOpenCreateModal={() => setIsCreateModalOpen(true)}
+                  onSelectProject={handleSelectProject}
                   onSelectTab={setCurrentTab}
-                  onRefreshProject={handleRefreshActiveProject}
+                  settings={settings}
                 />
-              ) : (
-                <div
-                  className={`p-16 text-center rounded-3xl border border-dashed ${
-                    isDark
-                      ? 'bg-[#0F1626] border-slate-800'
-                      : 'bg-white border-slate-300'
-                  }`}
-                >
-                  <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>
-                    No Project Selected
-                  </h3>
-                  <p className={`text-xs mt-1 mb-6 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                    Create a new project or select an existing one to enter the studio workspace.
-                  </p>
-                  <button
-                    onClick={() => setIsCreateModalOpen(true)}
-                    className="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-purple-600 hover:bg-purple-500 transition-all"
-                  >
-                    Create New Project
-                  </button>
-                </div>
-              )
-            )}
+              )}
+
+              {currentTab === 'workspace' && (
+                activeProject ? (
+                  <ProjectWorkspace
+                    project={activeProject}
+                    onUpdateProject={(updated) => {
+                      setActiveProject(updated);
+                      setProjects((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+                    }}
+                    onSelectTab={setCurrentTab}
+                    onRefreshProject={handleRefreshActiveProject}
+                  />
+                ) : (
+                  <div className="p-16 text-center card card-muted border-dashed">
+                    <h3 className="text-base font-semibold text-text1">
+                      No Project Selected
+                    </h3>
+                    <p className="text-xs text-text3 mt-1 mb-6">
+                      Create a new project or select an existing one to enter the studio workspace.
+                    </p>
+                    <button
+                      onClick={() => setIsCreateModalOpen(true)}
+                      className="btn-primary"
+                    >
+                      Create New Project
+                    </button>
+                  </div>
+                )
+              )}
 
             {currentTab === 'activity' && (
               <AgentActivityView
@@ -308,6 +304,7 @@ export const App: React.FC = () => {
           </>
         )}
       </main>
+      </div>
 
       {/* Project Creation Modal */}
       <CreateProjectModal
