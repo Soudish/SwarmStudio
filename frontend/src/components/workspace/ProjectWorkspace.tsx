@@ -24,7 +24,13 @@ import {
   Loader2,
   FileDown,
   X,
-  ArrowRight
+  ArrowRight,
+  ChevronDown,
+  Eye,
+  Volume2,
+  MessageSquare,
+  MapPin,
+  Sunrise
 } from 'lucide-react';
 import { ProjectData } from '../../types';
 import { api } from '../../services/api';
@@ -91,6 +97,9 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
   const [editingSceneIdx, setEditingSceneIdx] = useState<number | null>(null);
   const [editedAction, setEditedAction] = useState('');
   const [editedDialogue, setEditedDialogue] = useState('');
+
+  // Scene accordion — first scene expanded by default
+  const [expandedSceneIdx, setExpandedSceneIdx] = useState<number | null>(0);
 
   // Export states
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
@@ -585,7 +594,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
                 </div>
               </div>
 
-              {/* Scene Breakdown Table / Cards */}
+              {/* Scene Breakdown — Accordion */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <h3 className="text-base font-bold text-text1">
@@ -594,110 +603,163 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
                   </h3>
                 </div>
 
-                <div className="space-y-3">
-                  {project.story.scenes.map((scene, idx) => (
-                    <div key={idx} className="card p-5 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <span className="w-8 h-8 rounded-xl bg-accent/10 text-accent font-bold text-xs flex items-center justify-center border border-accent/20 shrink-0">
+                <div className="space-y-2">
+                  {project.story.scenes.map((scene, idx) => {
+                    const isExpanded = expandedSceneIdx === idx;
+                    const isEditing = editingSceneIdx === idx;
+                    return (
+                      <div
+                        key={idx}
+                        className="card overflow-hidden"
+                        style={{ borderLeft: isExpanded ? '2px solid var(--accent)' : '2px solid transparent', transition: 'border-color 0.2s' }}
+                      >
+                        {/* ── HEADER ROW (always visible, click to expand) ── */}
+                        <button
+                          className="w-full flex items-center gap-3 px-4 py-3.5 text-left group"
+                          onClick={() => {
+                            if (!isEditing) setExpandedSceneIdx(isExpanded ? null : idx);
+                          }}
+                        >
+                          {/* Scene number badge */}
+                          <span className={`w-7 h-7 rounded-lg text-[11px] font-bold flex items-center justify-center shrink-0 transition-colors ${isExpanded ? 'bg-accent text-white' : 'bg-accent/10 text-accent border border-accent/20'}`}>
                             {scene.scene_number}
                           </span>
-                          <div>
-                            <h4 className="text-sm font-bold text-text1 uppercase tracking-wide">{scene.title}</h4>
-                            <p className="text-xs text-text3 mt-0.5">
-                              {scene.location} · <span className="text-accent font-medium">{scene.time}</span>
-                            </p>
-                          </div>
-                        </div>
 
-                        {editingSceneIdx === idx ? (
-                          <div className="flex items-center gap-1.5">
-                            <button
-                              onClick={() => handleSaveSceneEdit(idx)}
-                              className="btn-primary py-1 px-3 text-xs"
-                            >
-                              <Save className="w-3.5 h-3.5" />
-                              <span>Save</span>
-                            </button>
-                            <button
-                              onClick={() => setEditingSceneIdx(null)}
-                              className="btn-ghost py-1 px-3 text-xs"
-                            >
-                              Cancel
-                            </button>
+                          {/* Title + meta */}
+                          <div className="flex-1 min-w-0">
+                            <span className="text-xs font-bold text-text1 uppercase tracking-wide truncate block">{scene.title}</span>
+                            <span className="flex items-center gap-1.5 mt-0.5">
+                              <MapPin className="w-2.5 h-2.5 text-text3 shrink-0" />
+                              <span className="text-[11px] text-text3 truncate">{scene.location}</span>
+                              <span className="text-text3 mx-0.5">·</span>
+                              <Sunrise className="w-2.5 h-2.5 text-accent/70 shrink-0" />
+                              <span className="text-[11px] text-accent/80 font-medium truncate">{scene.time}</span>
+                            </span>
                           </div>
-                        ) : (
-                          <button
-                            onClick={() => {
-                              setEditingSceneIdx(idx);
-                              setEditedAction(scene.action);
-                              setEditedDialogue(scene.dialogue || '');
-                            }}
-                            className="p-1.5 rounded-lg text-text3 hover:text-text1 hover:bg-surface-muted transition-colors"
-                            title="Edit Scene"
+
+                          {/* Cue type indicators */}
+                          <div className="flex items-center gap-1 shrink-0">
+                            {scene.visual_cues && (
+                              <span title="Visual cue" className="w-5 h-5 rounded-md bg-purple-500/10 flex items-center justify-center">
+                                <Eye className="w-2.5 h-2.5 text-purple-500" />
+                              </span>
+                            )}
+                            {scene.audio_cues && (
+                              <span title="Audio cue" className="w-5 h-5 rounded-md bg-blue-500/10 flex items-center justify-center">
+                                <Volume2 className="w-2.5 h-2.5 text-blue-500" />
+                              </span>
+                            )}
+                            {scene.dialogue && (
+                              <span title="Dialogue" className="w-5 h-5 rounded-md bg-accent/10 flex items-center justify-center">
+                                <MessageSquare className="w-2.5 h-2.5 text-accent" />
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Chevron */}
+                          <motion.span
+                            animate={{ rotate: isExpanded ? 180 : 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="shrink-0 text-text3"
                           >
-                            <Edit3 className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
+                            <ChevronDown className="w-3.5 h-3.5" />
+                          </motion.span>
+                        </button>
 
-                      {editingSceneIdx === idx ? (
-                        <div className="space-y-3 pt-2 border-t border-border">
-                          <div>
-                            <label className="label block mb-1">Dramatic Action</label>
-                            <textarea
-                              rows={3}
-                              value={editedAction}
-                              onChange={(e) => setEditedAction(e.target.value)}
-                              className="input text-xs"
-                            />
-                          </div>
-                          <div>
-                            <label className="label block mb-1">Key Dialogue Line</label>
-                            <textarea
-                              rows={2}
-                              value={editedDialogue}
-                              onChange={(e) => setEditedDialogue(e.target.value)}
-                              className="input font-mono text-xs"
-                            />
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          <p className="text-xs sm:text-sm text-text2 leading-relaxed">
-                            {scene.action}
-                          </p>
+                        {/* ── EXPANDED CONTENT ── */}
+                        <AnimatePresence initial={false}>
+                          {isExpanded && (
+                            <motion.div
+                              key="content"
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+                              style={{ overflow: 'hidden' }}
+                            >
+                              <div className="px-4 pb-4 space-y-3 border-t border-border">
+                                {/* Edit controls */}
+                                <div className="flex items-center justify-end pt-2">
+                                  {isEditing ? (
+                                    <div className="flex items-center gap-1.5">
+                                      <button onClick={() => handleSaveSceneEdit(idx)} className="btn-primary py-1 px-3 text-xs">
+                                        <Save className="w-3 h-3" /><span>Save</span>
+                                      </button>
+                                      <button onClick={() => setEditingSceneIdx(null)} className="btn-ghost py-1 px-3 text-xs">Cancel</button>
+                                    </div>
+                                  ) : (
+                                    <button
+                                      onClick={() => { setEditingSceneIdx(idx); setEditedAction(scene.action); setEditedDialogue(scene.dialogue || ''); }}
+                                      className="flex items-center gap-1 text-[11px] text-text3 hover:text-accent transition-colors"
+                                    >
+                                      <Edit3 className="w-3 h-3" /> Edit
+                                    </button>
+                                  )}
+                                </div>
 
-                          {scene.dialogue && (
-                            <div className="relative">
-                              <div className="absolute top-0 left-0 bottom-0 w-0.5 bg-accent/30 rounded-full" />
-                              <div className="pl-3 py-2 text-xs font-mono text-text1 italic">
-                                <span className="label block mb-1 not-italic">Dialogue Beat</span>
-                                {scene.dialogue}
+                                {isEditing ? (
+                                  <div className="space-y-3">
+                                    <div>
+                                      <label className="label block mb-1">Dramatic Action</label>
+                                      <textarea rows={3} value={editedAction} onChange={(e) => setEditedAction(e.target.value)} className="input text-xs" />
+                                    </div>
+                                    <div>
+                                      <label className="label block mb-1">Key Dialogue Line</label>
+                                      <textarea rows={2} value={editedDialogue} onChange={(e) => setEditedDialogue(e.target.value)} className="input font-mono text-xs" />
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <>
+                                    {/* Action */}
+                                    <p className="text-sm text-text2 leading-relaxed">{scene.action}</p>
+
+                                    {/* Dialogue Beat — screenplay-style cue card */}
+                                    {scene.dialogue && (
+                                      <div className="rounded-xl bg-surface-muted/60 border border-border px-4 py-3 space-y-1.5">
+                                        <div className="flex items-center gap-1.5">
+                                          <MessageSquare className="w-3 h-3 text-accent" />
+                                          <span className="text-[10px] font-bold uppercase tracking-widest text-accent">Dialogue Beat</span>
+                                        </div>
+                                        <p className="text-xs font-mono text-text1 italic leading-relaxed">{scene.dialogue}</p>
+                                      </div>
+                                    )}
+
+                                    {/* VIS + AUD cues — side by side chips */}
+                                    {(scene.visual_cues || scene.audio_cues) && (
+                                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                                        {scene.visual_cues && (
+                                          <div className="flex gap-2 items-start rounded-xl bg-purple-500/5 border border-purple-500/15 p-3">
+                                            <div className="w-6 h-6 rounded-lg bg-purple-500/15 flex items-center justify-center shrink-0 mt-0.5">
+                                              <Eye className="w-3 h-3 text-purple-500" />
+                                            </div>
+                                            <div>
+                                              <span className="text-[9px] font-bold uppercase tracking-widest text-purple-500 block mb-0.5">Visual</span>
+                                              <span className="text-[11px] text-text2 leading-relaxed">{scene.visual_cues}</span>
+                                            </div>
+                                          </div>
+                                        )}
+                                        {scene.audio_cues && (
+                                          <div className="flex gap-2 items-start rounded-xl bg-blue-500/5 border border-blue-500/15 p-3">
+                                            <div className="w-6 h-6 rounded-lg bg-blue-500/15 flex items-center justify-center shrink-0 mt-0.5">
+                                              <Volume2 className="w-3 h-3 text-blue-500" />
+                                            </div>
+                                            <div>
+                                              <span className="text-[9px] font-bold uppercase tracking-widest text-blue-500 block mb-0.5">Audio</span>
+                                              <span className="text-[11px] text-text2 leading-relaxed">{scene.audio_cues}</span>
+                                            </div>
+                                          </div>
+                                        )}
+                                      </div>
+                                    )}
+                                  </>
+                                )}
                               </div>
-                            </div>
+                            </motion.div>
                           )}
-
-                          {(scene.visual_cues || scene.audio_cues) && (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-border">
-                              {scene.visual_cues && (
-                                <div className="flex gap-1.5 items-start">
-                                  <span className="pill text-[9px] shrink-0 mt-0.5 bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20">VIS</span>
-                                  <span className="text-[11px] text-text3 leading-relaxed">{scene.visual_cues}</span>
-                                </div>
-                              )}
-                              {scene.audio_cues && (
-                                <div className="flex gap-1.5 items-start">
-                                  <span className="pill text-[9px] shrink-0 mt-0.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20">AUD</span>
-                                  <span className="text-[11px] text-text3 leading-relaxed">{scene.audio_cues}</span>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  ))}
+                        </AnimatePresence>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </>
