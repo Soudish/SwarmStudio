@@ -472,8 +472,8 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
           {project.research ? (
             <>
               {/* World Building & Lore Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="card p-6 space-y-2.5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="card p-6 space-y-3 border-l-2 border-l-accent">
                   <div className="flex items-center gap-2">
                     <Brain className="w-4 h-4 text-accent" />
                     <h3 className="text-sm font-semibold text-text1">Setting & Environment</h3>
@@ -483,9 +483,9 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
                   </p>
                 </div>
 
-                <div className="card p-6 space-y-2.5">
+                <div className="card p-6 space-y-3 border-l-2 border-l-accent/40">
                   <div className="flex items-center gap-2">
-                    <Sliders className="w-4 h-4 text-accent" />
+                    <Sliders className="w-4 h-4 text-accent/70" />
                     <h3 className="text-sm font-semibold text-text1">Laws & Lore</h3>
                   </div>
                   <p className="text-xs sm:text-sm text-text2 leading-relaxed">
@@ -495,42 +495,53 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
               </div>
 
               {/* Characters Section */}
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-base font-bold text-text1">Characters</h3>
-                  </div>
+                  <h3 className="text-base font-bold text-text1">Characters</h3>
                   <span className="pill text-xs">{project.research.characters.length} Roles</span>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {project.research.characters.map((char, idx) => (
-                    <div key={idx} className="card p-5 flex flex-col justify-between space-y-3">
-                      <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="label text-accent font-semibold">{char.role}</span>
-                          {char.archetype && (
-                            <span className="pill text-[10px]">{char.archetype}</span>
-                          )}
-                        </div>
+                    <div key={idx} className="card p-5 space-y-3">
+                      {/* Card header: role + archetype */}
+                      <div className="flex items-start justify-between gap-2">
+                        <span className="label text-accent/80 uppercase tracking-widest text-[10px]">{char.role}</span>
+                        {char.archetype && (
+                          <span className="pill text-[10px] shrink-0">{char.archetype}</span>
+                        )}
+                      </div>
 
-                        <div className="flex items-center gap-2.5 mb-2">
-                          <div className="w-8 h-8 rounded-full bg-accent-tint text-accent-text flex items-center justify-center font-bold text-xs shrink-0">
-                            {char.name.charAt(0).toUpperCase()}
-                          </div>
-                          <h4 className="text-base font-bold text-text1 truncate">{char.name}</h4>
+                      {/* Character identity */}
+                      <div className="flex items-center gap-3 pb-3 border-b border-border">
+                        <div className="w-10 h-10 rounded-full bg-accent-tint text-accent-text flex items-center justify-center font-bold text-sm shrink-0">
+                          {char.name.charAt(0).toUpperCase()}
                         </div>
+                        <h4 className="text-base font-bold text-text1">{char.name}</h4>
+                      </div>
 
-                        <div className="space-y-2 text-xs text-text2">
-                          <p><strong className="text-text1">Appearance:</strong> {char.appearance}</p>
-                          <p><strong className="text-text1">Personality:</strong> {char.personality}</p>
-                          <p><strong className="text-text1">Motivation:</strong> {char.motivation}</p>
-                          {char.character_arc && (
-                            <div className="pt-2 border-t border-border text-[11px] text-accent">
-                              <strong className="text-text3">Arc:</strong> {char.character_arc}
+                      {/* Attributes */}
+                      <div className="space-y-2 text-xs">
+                        <div className="flex gap-1.5">
+                          <span className="text-text3 font-semibold w-20 shrink-0">Appearance</span>
+                          <span className="text-text2 leading-relaxed">{char.appearance}</span>
+                        </div>
+                        <div className="flex gap-1.5">
+                          <span className="text-text3 font-semibold w-20 shrink-0">Personality</span>
+                          <span className="text-text2 leading-relaxed">{char.personality}</span>
+                        </div>
+                        <div className="flex gap-1.5">
+                          <span className="text-text3 font-semibold w-20 shrink-0">Motivation</span>
+                          <span className="text-text2 leading-relaxed">{char.motivation}</span>
+                        </div>
+                        {char.character_arc && (
+                          <div className="pt-2 border-t border-border">
+                            <div className="flex items-start gap-1.5">
+                              <span className="text-text3 font-semibold w-20 shrink-0 text-[10px] uppercase tracking-wider pt-0.5">Arc</span>
+                              <span className="text-accent text-[11px] leading-relaxed">{char.character_arc}</span>
                             </div>
-                          )}
-                        </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -565,19 +576,22 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
                     <span>{copiedPromptId === 'screenplay' ? 'Copied' : 'Copy'}</span>
                   </button>
                 </div>
-                <div className="card-muted p-4 text-xs font-mono text-text2 leading-relaxed whitespace-pre-wrap max-h-64 overflow-y-auto">
-                  {project.story.full_script_or_treatment}
+                {/* Screenplay-style monospace block with left margin indicator */}
+                <div className="relative">
+                  <div className="absolute top-0 left-0 bottom-0 w-1 bg-accent/20 rounded-full" />
+                  <div className="pl-4 card-muted text-xs font-mono text-text2 leading-relaxed whitespace-pre-wrap max-h-72 overflow-y-auto p-4 pl-5">
+                    {project.story.full_script_or_treatment}
+                  </div>
                 </div>
               </div>
 
               {/* Scene Breakdown Table / Cards */}
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-base font-bold text-text1">
-                      Scene Breakdown ({project.story.scenes.length})
-                    </h3>
-                  </div>
+                  <h3 className="text-base font-bold text-text1">
+                    Scene Breakdown
+                    <span className="ml-2 text-sm font-normal text-text3">({project.story.scenes.length})</span>
+                  </h3>
                 </div>
 
                 <div className="space-y-3">
@@ -585,13 +599,13 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
                     <div key={idx} className="card p-5 space-y-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <span className="w-7 h-7 rounded-lg bg-surface-muted text-text1 font-bold text-xs flex items-center justify-center border border-border">
+                          <span className="w-8 h-8 rounded-xl bg-accent/10 text-accent font-bold text-xs flex items-center justify-center border border-accent/20 shrink-0">
                             {scene.scene_number}
                           </span>
                           <div>
-                            <h4 className="text-sm font-bold text-text1">{scene.title}</h4>
-                            <p className="text-xs text-text3">
-                              {scene.location} • <span className="text-accent">{scene.time}</span>
+                            <h4 className="text-sm font-bold text-text1 uppercase tracking-wide">{scene.title}</h4>
+                            <p className="text-xs text-text3 mt-0.5">
+                              {scene.location} · <span className="text-accent font-medium">{scene.time}</span>
                             </p>
                           </div>
                         </div>
@@ -655,24 +669,31 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
                           </p>
 
                           {scene.dialogue && (
-                            <div className="card-muted p-3 text-xs font-mono text-text1">
-                              <span className="label block mb-1">Dialogue Beat</span>
-                              {scene.dialogue}
+                            <div className="relative">
+                              <div className="absolute top-0 left-0 bottom-0 w-0.5 bg-accent/30 rounded-full" />
+                              <div className="pl-3 py-2 text-xs font-mono text-text1 italic">
+                                <span className="label block mb-1 not-italic">Dialogue Beat</span>
+                                {scene.dialogue}
+                              </div>
                             </div>
                           )}
 
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 text-[11px] text-text3 border-t border-border">
-                            {scene.visual_cues && (
-                              <div>
-                                <strong className="text-text2">Visual Cue:</strong> {scene.visual_cues}
-                              </div>
-                            )}
-                            {scene.audio_cues && (
-                              <div>
-                                <strong className="text-text2">Audio Cue:</strong> {scene.audio_cues}
-                              </div>
-                            )}
-                          </div>
+                          {(scene.visual_cues || scene.audio_cues) && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-border">
+                              {scene.visual_cues && (
+                                <div className="flex gap-1.5 items-start">
+                                  <span className="pill text-[9px] shrink-0 mt-0.5 bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20">VIS</span>
+                                  <span className="text-[11px] text-text3 leading-relaxed">{scene.visual_cues}</span>
+                                </div>
+                              )}
+                              {scene.audio_cues && (
+                                <div className="flex gap-1.5 items-start">
+                                  <span className="pill text-[9px] shrink-0 mt-0.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20">AUD</span>
+                                  <span className="text-[11px] text-text3 leading-relaxed">{scene.audio_cues}</span>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </>
                       )}
                     </div>
@@ -814,18 +835,21 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
 
               {/* Soundtrack Tracks & Voice Casting */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="card p-6 space-y-3">
+                <div className="card p-5 space-y-3">
                   <h3 className="text-sm font-semibold text-text1">Soundtrack Tracks</h3>
-                  <div className="space-y-1.5">
+                  <div className="space-y-1">
                     {project.audio.soundtrack_tracks.map((t, idx) => (
-                      <div key={idx} className="p-2 rounded-xl bg-surface-muted text-xs text-text2">
-                        {t}
+                      <div key={idx} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-surface-muted transition-colors group">
+                        <span className="w-5 h-5 rounded-full bg-accent/10 text-accent flex items-center justify-center text-[10px] font-bold shrink-0">
+                          {idx + 1}
+                        </span>
+                        <span className="text-xs text-text2 leading-relaxed flex-1">{t}</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div className="card p-6 space-y-2">
+                <div className="card p-5 space-y-2">
                   <h3 className="text-sm font-semibold text-text1">Voice Casting</h3>
                   <p className="text-xs sm:text-sm text-text2 leading-relaxed">
                     {project.audio.voice_casting_notes}
@@ -834,22 +858,21 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
               </div>
 
               {/* Sound Effects Catalog */}
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-base font-bold text-text1">
-                    Sound Effects ({project.audio.sound_effects.length})
-                  </h3>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-base font-bold text-text1">Sound Effects</h3>
+                  <span className="pill text-xs">{project.audio.sound_effects.length} cues</span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {project.audio.sound_effects.map((sfx, idx) => (
-                    <div key={idx} className="card p-4 space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold text-xs text-text1">{sfx.name}</span>
-                        <span className="pill text-[10px]">{sfx.category}</span>
+                    <div key={idx} className="card p-4 space-y-1.5 border-l-2 border-l-accent/30">
+                      <div className="flex items-start justify-between gap-1">
+                        <span className="font-semibold text-xs text-text1 leading-tight">{sfx.name}</span>
+                        <span className="pill text-[9px] shrink-0">{sfx.category}</span>
                       </div>
-                      <span className="text-[11px] text-accent font-medium block">{sfx.scene_ref}</span>
-                      <p className="text-xs text-text2 leading-relaxed">{sfx.description}</p>
+                      <span className="text-[10px] text-accent font-medium block">{sfx.scene_ref}</span>
+                      <p className="text-[11px] text-text3 leading-relaxed">{sfx.description}</p>
                     </div>
                   ))}
                 </div>
