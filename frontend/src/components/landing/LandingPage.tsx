@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   ArrowRight,
   Brain,
@@ -9,11 +9,19 @@ import {
   Film,
   Gamepad2,
   Mic,
-  RefreshCw,
-  Play,
   Sun,
-  Moon
+  Moon,
+  Sparkles,
+  Terminal,
+  FileText,
+  Sliders,
+  ShieldCheck,
+  Cpu,
+  Layers,
+  ExternalLink,
+  ChevronRight
 } from 'lucide-react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { User } from '../../types';
 import { useTheme } from '../../contexts/ThemeContext';
 
@@ -28,8 +36,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   onOpenAuth,
   currentUser,
 }) => {
-  const [activeMediumTab, setActiveMediumTab] = useState<'film' | 'game' | 'podcast'>('film');
   const { isDark, toggleTheme } = useTheme();
+  const shouldReduceMotion = useReducedMotion();
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [activeMediumTab, setActiveMediumTab] = useState<'film' | 'game' | 'podcast'>('film');
+  const [activeStoryStep, setActiveStoryStep] = useState(0);
+  const storyContainerRef = useRef<HTMLDivElement>(null);
+
+  // Scroll listener for sticky navbar styling
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const mediumShowcase = {
     film: {
@@ -40,7 +61,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       agentsOutput: [
         { label: 'Story Agent', text: 'Three-Act screenplay breakdown with 4 dramatic scenes & dialogue excerpts' },
         { label: 'Research Agent', text: 'Lore of New Aethelgard 2148 + Unit 7-Kaelen & Leo Vane character dossiers' },
-        { label: 'Visual Agent', text: 'Panavision 35mm anamorphic Midjourney prompts + 5-color neon obsidian palette' },
+        { label: 'Visual Agent', text: 'Panavision 35mm anamorphic Midjourney prompts + 5-color obsidian neon palette' },
         { label: 'Audio Agent', text: 'Felt upright piano, cello motifs, and 5 categorized rain/servo SFX cues' },
         { label: 'Critic Agent', text: 'Quality Index: 92/100 — "Greenlit with distinction for high thematic resonance"' },
       ]
@@ -73,253 +94,333 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     }
   };
 
-  // Theme-aware class helpers
-  const cardBg = isDark ? 'bg-[#0F1626]' : 'bg-white';
-  const cardBorder = isDark ? 'border-slate-800' : 'border-slate-200';
-  const cardBorderHover = isDark ? 'hover:border-purple-500/40' : 'hover:border-purple-300';
-  const textPrimary = isDark ? 'text-white' : 'text-slate-900';
-  const textSecondary = isDark ? 'text-slate-300' : 'text-slate-600';
-  const textMuted = isDark ? 'text-slate-400' : 'text-slate-500';
-  const textLabel = isDark ? 'text-slate-500' : 'text-slate-400';
-  const codeBg = isDark ? 'bg-slate-950/80' : 'bg-slate-50';
-  const codeBorder = isDark ? 'border-slate-900' : 'border-slate-200';
+  const workflowSteps = [
+    {
+      num: '01',
+      title: 'Research & Lore',
+      agent: 'Research Agent',
+      dotColor: 'bg-agent-research',
+      desc: 'Grounds your premise with expansive world lore, faction politics, and psychologically rich character dossiers.',
+      mockup: {
+        badge: 'Character Dossier',
+        name: 'UNIT 7-KAELEN',
+        role: 'Protagonist / Decommissioned Android',
+        details: 'Constructed 2138 by Aethel Corp. Possesses obsolete emotive subroutine that activates under acoustic resonance.',
+        tags: ['New Aethelgard', 'Heuristic Memory', 'Empathetic Glitch']
+      }
+    },
+    {
+      num: '02',
+      title: 'Story Architecture',
+      agent: 'Story Agent',
+      dotColor: 'bg-agent-story',
+      desc: 'Structures a rigorous 3-act narrative beat sheet, scene treatments, and standard screenplay dialogue.',
+      mockup: {
+        badge: 'Screenplay Excerpt',
+        name: 'SCENE 1: THE DRAINAGE ALLEY',
+        role: 'EXT. LOWER DISTRICT - NIGHT (RAIN)',
+        details: 'KAELEN steps beneath a leaking conduit. Rain droplets vaporize against his warm chassis. Leo clutches a music box.',
+        tags: ['Act I Beat', 'Slugline: EXT/NIGHT', 'Page 1 of 14']
+      }
+    },
+    {
+      num: '03',
+      title: 'Visual & Acoustic Design',
+      agent: 'Visual & Audio Agents',
+      dotColor: 'bg-agent-visual',
+      desc: 'Synthesizes 5-swatch color palettes, Midjourney/FLUX prompts, and scene-specific acoustic soundscapes.',
+      mockup: {
+        badge: 'Multimodal Assets',
+        name: 'Aesthetic Palette & Score Leitmotif',
+        role: 'Panavision 35mm + Felt Piano / Cello Motifs',
+        details: 'Color Palette: #0B0E14, #1E293B, #6D5BD0, #38BDF8, #F1F5F9. SFX: 5 categorized atmospheric cues.',
+        tags: ['5 Swatches', 'Midjourney v6', 'Foley Soundboard']
+      }
+    },
+    {
+      num: '04',
+      title: 'Continuity & Quality Audit',
+      agent: 'Critic Agent',
+      dotColor: 'bg-agent-critic',
+      desc: 'Audits continuity, plot holes, and character voice consistency, calculating an objective Quality Index.',
+      mockup: {
+        badge: 'Quality Assessment',
+        name: 'Quality Index: 92/100 — Greenlit',
+        role: 'Continuity & Pacing Verification',
+        details: 'Pacing is tight; emotional arc builds smoothly toward Scene 3. High thematic resonance with zero logic contradictions.',
+        tags: ['Continuity: Pass', 'Index: 92/100', 'Editorial Notes: 3']
+      }
+    },
+    {
+      num: '05',
+      title: 'Director Refine & Export',
+      agent: 'Human Director',
+      dotColor: 'bg-accent',
+      desc: 'Maintain full creative agency with inline screenplay editing, targeted section regeneration, and pitch-ready exports.',
+      mockup: {
+        badge: 'Production Deliverables',
+        name: 'Pitch Deck & Treatment Ready',
+        role: 'PDF Bible, Markdown Treatment, Print Decks',
+        details: 'One-click publication of production-grade documentation ready for studio pitches, game engines, or writer rooms.',
+        tags: ['Vector PDF', 'Markdown', 'Print Stylesheet']
+      }
+    }
+  ];
 
   return (
-    <div className={`min-h-screen theme-transition ${isDark ? 'bg-[#090D16] text-slate-100' : 'bg-[#F8FAFC] text-slate-900'} selection:bg-purple-600 selection:text-white`}>
-      {/* Background ambient glow shapes */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className={`absolute -top-40 left-1/2 -translate-x-1/2 w-[900px] h-[500px] blur-3xl ${isDark ? 'bg-gradient-to-b from-purple-700/20 via-indigo-600/10 to-transparent opacity-75' : 'bg-gradient-to-b from-purple-300/20 via-indigo-200/10 to-transparent opacity-50'}`} />
-        <div className={`absolute top-[800px] -left-40 w-96 h-96 rounded-full blur-3xl ${isDark ? 'bg-purple-600/10' : 'bg-purple-200/20'}`} />
-        <div className={`absolute top-[1600px] -right-40 w-96 h-96 rounded-full blur-3xl ${isDark ? 'bg-indigo-600/10' : 'bg-indigo-200/20'}`} />
-      </div>
-
-      {/* Landing Navbar */}
-      <nav className="relative z-30 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex items-center justify-between">
-        <div className="flex items-center gap-3 cursor-pointer group" onClick={onEnterStudio}>
-          <div className="relative w-11 h-11 rounded-2xl overflow-hidden shadow-lg shadow-purple-600/30 border border-purple-400/30 group-hover:shadow-purple-500/50 transition-shadow">
-            <img src="/logo.jpg" alt="SwarmStudio" className="w-full h-full object-cover" />
-          </div>
-          <div>
-            <span className={`font-extrabold text-xl tracking-tight bg-gradient-to-r bg-clip-text text-transparent ${isDark ? 'from-white via-purple-100 to-purple-300' : 'from-slate-800 via-purple-700 to-purple-500'}`}>
-              SwarmStudio
-            </span>
-            <span className={`ml-2 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${isDark ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'bg-purple-100 text-purple-600 border border-purple-200'}`}>
-              AI Creative Swarm
-            </span>
-          </div>
-        </div>
-
-        <div className={`hidden md:flex items-center space-x-8 text-sm font-medium ${textSecondary}`}>
-          <a href="#features" className="hover:text-purple-400 transition-colors">Features</a>
-          <a href="#agents" className="hover:text-purple-400 transition-colors">Agent Swarm</a>
-          <a href="#showcase" className="hover:text-purple-400 transition-colors">Playground</a>
-          <a href="#workflow" className="hover:text-purple-400 transition-colors">How It Works</a>
-        </div>
-
-        <div className="flex items-center gap-3">
-          {/* Theme Toggle */}
-          <button
-            onClick={toggleTheme}
-            className={`p-2 rounded-xl transition-all ${isDark ? 'text-amber-400 hover:bg-slate-800' : 'text-purple-600 hover:bg-purple-50'}`}
-            title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-          >
-            {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </button>
-
-          {currentUser ? (
-            <button
-              onClick={onEnterStudio}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-lg shadow-purple-900/40 border border-purple-400/30 transition-all hover:scale-[1.02]"
-            >
-              <span>Open Studio</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          ) : (
-            <>
-              <button
-                onClick={() => onOpenAuth('login')}
-                className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${isDark ? 'text-slate-300 hover:text-white hover:bg-slate-800/80' : 'text-slate-600 hover:text-slate-800 hover:bg-slate-100'}`}
-              >
-                Sign In
-              </button>
-              <button
-                onClick={() => onOpenAuth('register')}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-md shadow-purple-900/30 border border-purple-400/30 transition-all hover:scale-[1.02]"
-              >
-                <span>Get Started</span>
-              </button>
-            </>
-          )}
-        </div>
-      </nav>
-
-      {/* HERO SECTION */}
-      <section className="relative z-10 pt-16 pb-20 md:pt-24 md:pb-32 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center">
-        {/* Logo showcase */}
-        <div className="flex justify-center mb-8">
-          <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-3xl overflow-hidden shadow-2xl shadow-purple-600/40 border-2 border-purple-400/40 animate-glow">
-            <img src="/logo.jpg" alt="SwarmStudio Logo" className="w-full h-full object-cover" />
-          </div>
-        </div>
-
-        {/* Eyebrow badge */}
-        <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold mb-6 shadow-sm ${isDark ? 'bg-purple-500/15 border border-purple-500/30 text-purple-300' : 'bg-purple-100 border border-purple-200 text-purple-600'}`}>
-          <span className="w-2 h-2 rounded-full bg-purple-400 animate-ping" />
-          <span>Next-Gen Autonomous Creative Intelligence</span>
-        </div>
-
-        {/* Main Headline */}
-        <h1 className={`text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.1] max-w-4xl mx-auto ${textPrimary}`}>
-          Where AI Agents{' '}
-          <span className="bg-gradient-to-r from-purple-400 via-fuchsia-300 to-indigo-300 bg-clip-text text-transparent">
-            Direct, Write, & Score
-          </span>{' '}
-          Your Next Creative Vision.
-        </h1>
-
-        {/* Subtitle */}
-        <p className={`mt-6 text-base sm:text-xl max-w-2xl mx-auto leading-relaxed ${textSecondary}`}>
-          Transform a single creative spark into a comprehensive production bible. Specialized AI agents collaborate, review each other's work, and deliver complete scripts, world lore, Midjourney prompts, and acoustic soundscapes.
-        </p>
-
-        {/* CTA Buttons */}
-        <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-          <button
+    <div className="min-h-screen bg-bg text-text1 selection:bg-accent-tint selection:text-accent-text theme-transition">
+      {/* ── STICKY MINIMAL NAVBAR ───────────────────────────────────────── */}
+      <header
+        className={`sticky top-0 z-50 transition-all duration-200 ${
+          isScrolled
+            ? 'bg-bg/85 backdrop-blur-md border-b border-border shadow-sm'
+            : 'bg-transparent border-b border-transparent'
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          {/* Logo & Brand */}
+          <div
             onClick={onEnterStudio}
-            className="flex items-center gap-2.5 px-8 py-4 rounded-2xl font-extrabold text-sm sm:text-base text-white bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-2xl shadow-purple-900/60 border border-purple-400/40 transition-all hover:scale-[1.03] active:scale-[0.98]"
+            className="flex items-center gap-3 cursor-pointer group"
           >
-            <img src="/logo.jpg" alt="" className="w-6 h-6 rounded-lg" />
-            <span>Launch Studio Workspace</span>
-            <ArrowRight className="w-5 h-5" />
-          </button>
-
-          <a
-            href="#showcase"
-            className={`flex items-center gap-2 px-6 py-4 rounded-2xl font-semibold text-sm sm:text-base transition-all ${isDark ? 'text-slate-300 bg-slate-900/80 hover:bg-slate-800 border border-slate-700 hover:border-purple-500/40' : 'text-slate-600 bg-white hover:bg-slate-50 border border-slate-200 hover:border-purple-300 shadow-sm'}`}
-          >
-            <Play className="w-4 h-4 text-purple-400" />
-            <span>Explore Live Deliverables</span>
-          </a>
-        </div>
-
-        {/* Highlights banner row */}
-        <div className={`mt-16 pt-10 border-t grid grid-cols-2 md:grid-cols-4 gap-6 text-left max-w-4xl mx-auto ${isDark ? 'border-purple-500/10' : 'border-purple-200/50'}`}>
-          {[
-            { stat: '5 Agents', label: 'Autonomous Creative Swarm', desc: 'Research, Story, Visual, Audio & Critic' },
-            { stat: '100% Private', label: 'Local Ollama Inference', desc: 'Zero cloud LLM lock-in or recurring fees' },
-            { stat: 'Human In Loop', label: 'Inline Screenplay Editing', desc: 'Section regeneration with director notes' },
-            { stat: 'Production Ready', label: 'PDF & Markdown Exports', desc: 'Ready for studio pitches & pitch decks' },
-          ].map((item, i) => (
-            <div key={i} className="space-y-1">
-              <div className={`text-2xl font-black ${textPrimary}`}>{item.stat}</div>
-              <div className="text-xs text-purple-400 font-semibold">{item.label}</div>
-              <p className={`text-[11px] ${textMuted}`}>{item.desc}</p>
+            <div className="w-8 h-8 rounded-lg overflow-hidden border border-border group-hover:border-border-hover transition-colors">
+              <img src="/logo.jpg" alt="SwarmStudio" className="w-full h-full object-cover" />
             </div>
-          ))}
-        </div>
-      </section>
-
-      {/* INTERACTIVE SWARM SIMULATION PREVIEW */}
-      <section className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
-        <div className={`rounded-3xl p-6 sm:p-8 border shadow-2xl relative overflow-hidden ${isDark ? 'bg-gradient-to-b from-[#131B2E] via-[#0F1626] to-[#0A0E1A] border-purple-500/30' : 'bg-gradient-to-b from-white via-slate-50 to-white border-purple-200 shadow-purple-100/50'}`}>
-          <div className={`absolute top-0 right-0 w-96 h-96 rounded-full blur-3xl pointer-events-none ${isDark ? 'bg-purple-600/10' : 'bg-purple-200/20'}`} />
-
-          {/* Window Mockup Header */}
-          <div className={`flex items-center justify-between border-b pb-4 mb-6 ${isDark ? 'border-slate-800' : 'border-slate-200'}`}>
             <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-rose-500/80" />
-              <span className="w-3 h-3 rounded-full bg-amber-500/80" />
-              <span className="w-3 h-3 rounded-full bg-emerald-500/80" />
-              <span className={`ml-3 text-xs font-mono ${textMuted}`}>SwarmStudio v1.0 — Active Creative Session</span>
+              <span className="font-semibold text-base tracking-tight text-text1">
+                SwarmStudio
+              </span>
+              <span className="hidden sm:inline-flex text-[11px] font-medium px-2 py-0.5 rounded-full bg-accent-tint text-accent-text">
+                Beta
+              </span>
             </div>
-            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-              Swarm Concurrency: Optimal
-            </span>
           </div>
 
-          {/* Grid showing live agent cards */}
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mb-6">
-            {[
-              { role: 'Research Agent', status: 'Done', desc: 'World Lore: New Aethelgard 2148', color: 'border-blue-500/40 text-blue-400' },
-              { role: 'Story Agent', status: 'Done', desc: 'Screenplay: 4 Scenes & 3-Act Flow', color: 'border-purple-500/40 text-purple-400' },
-              { role: 'Visual Agent', status: 'Done', desc: 'Midjourney Prompts & 5-Color Swatch', color: 'border-amber-500/40 text-amber-400' },
-              { role: 'Audio Agent', status: 'Done', desc: 'Felt Piano Soundtrack & SFX Cues', color: 'border-emerald-500/40 text-emerald-400' },
-              { role: 'Critic Agent', status: '92/100', desc: 'Continuity Audit: Greenlit', color: 'border-violet-500/40 text-violet-400' },
-            ].map((ag, i) => (
-              <div key={i} className={`p-3.5 rounded-2xl border space-y-1 text-left ${ag.color} ${isDark ? 'bg-slate-900/80' : 'bg-slate-50'}`}>
-                <div className="flex items-center justify-between text-[11px] font-bold">
-                  <span className={textPrimary}>{ag.role}</span>
-                  <span className="text-emerald-400 font-mono">✓ {ag.status}</span>
-                </div>
-                <p className={`text-[10px] line-clamp-2 ${textMuted}`}>{ag.desc}</p>
+          {/* Anchor Nav Links */}
+          <nav className="hidden md:flex items-center space-x-8 text-sm font-medium text-text2">
+            <a href="#features" className="hover:text-text1 transition-colors">Features</a>
+            <a href="#how-it-works" className="hover:text-text1 transition-colors">How It Works</a>
+            <a href="#agents" className="hover:text-text1 transition-colors">Agent Swarm</a>
+            <a href="#playground" className="hover:text-text1 transition-colors">Playground</a>
+          </nav>
+
+          {/* Actions: Theme Toggle + Auth */}
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-full text-text2 hover:text-text1 hover:bg-surface-muted transition-colors"
+              title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+              aria-label="Toggle theme"
+            >
+              {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
+
+            {currentUser ? (
+              <button
+                onClick={onEnterStudio}
+                className="btn-primary text-xs py-2 px-4"
+              >
+                <span>Open Studio</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={() => onOpenAuth('login')}
+                  className="btn-ghost text-xs py-2 px-3.5 border-transparent hover:border-border"
+                >
+                  Sign In
+                </button>
+                <button
+                  onClick={() => onOpenAuth('register')}
+                  className="btn-primary text-xs py-2 px-4"
+                >
+                  <span>Get Started</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* ── HERO SECTION ────────────────────────────────────────────────── */}
+      <section className="pt-8 sm:pt-14 pb-16 sm:pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="relative rounded-[28px] sm:rounded-[32px] border border-border bg-gradient-to-b from-surface via-surface to-surface-muted/60 p-8 sm:p-14 lg:p-16 overflow-hidden shadow-sm">
+          {/* Subtle ambient light gradient in top right */}
+          <div
+            className="absolute top-0 right-0 w-[500px] h-[400px] pointer-events-none opacity-40 blur-3xl -z-0"
+            style={{
+              background: 'radial-gradient(circle at 70% 30%, rgba(109, 91, 208, 0.18), transparent 70%)'
+            }}
+          />
+
+          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+            {/* Left Column: Copy & Actions */}
+            <div className="lg:col-span-7 space-y-6">
+              {/* Eyebrow badge */}
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-surface-muted border border-border text-text2">
+                <span className="w-2 h-2 rounded-full bg-accent" />
+                <span>Autonomous Multi-Agent Creative Intelligence</span>
               </div>
-            ))}
-          </div>
 
-          {/* Deliverable Snapshot Preview */}
-          <div className={`p-5 rounded-2xl border text-left space-y-3 font-mono text-xs ${codeBg} ${codeBorder}`}>
-            <div className={`flex items-center justify-between border-b pb-2 ${isDark ? 'border-slate-800/80 text-slate-400' : 'border-slate-200 text-slate-500'}`}>
-              <span className="font-bold text-purple-400">SCENE 1: THE DISCOVERY [Screenplay Excerpt]</span>
-              <span className="text-[11px]">LOCATION: Sector 4 Lower Drainage Alley &bull; MIDNIGHT DRIZZLE</span>
+              {/* Large Headline */}
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight text-text1 leading-[1.08]">
+                Where AI agents direct, write, and score your creative vision.
+              </h1>
+
+              {/* 2-line Subcopy */}
+              <p className="text-base sm:text-lg text-text2 leading-relaxed max-w-xl">
+                Transform a single premise into a complete production bible. Specialized AI agents research lore, draft screenplays, design visual prompts, and compose acoustic soundscapes in unified concert.
+              </p>
+
+              {/* CTAs */}
+              <div className="pt-2 flex flex-wrap items-center gap-3">
+                <button
+                  onClick={onEnterStudio}
+                  className="btn-primary text-sm px-6 py-3"
+                >
+                  <span>Launch Studio Workspace</span>
+                  <ArrowRight className="w-4 h-4 ml-1" />
+                </button>
+                <a
+                  href="#playground"
+                  className="btn-ghost text-sm px-5 py-3"
+                >
+                  <span>Explore Deliverables</span>
+                </a>
+              </div>
+
+              {/* Format & Tech Badges */}
+              <div className="pt-6 border-t border-border flex flex-wrap items-center gap-2">
+                <span className="text-xs text-text3 font-medium mr-1">Formats:</span>
+                <span className="pill text-xs">Film & Cinema</span>
+                <span className="pill text-xs">Game Narrative</span>
+                <span className="pill text-xs">Podcast Drama</span>
+                <span className="text-text3 text-xs mx-1">·</span>
+                <span className="text-xs text-text3 font-medium mr-1">Stack:</span>
+                <span className="pill text-xs">CrewAI</span>
+                <span className="pill text-xs">Local Ollama</span>
+                <span className="pill text-xs">FLUX.1</span>
+              </div>
             </div>
-            <p className={`leading-relaxed ${textSecondary}`}>
-              Cold rain patters against corroded iron pipes. UNIT 7-KAELEN kneels beside a stack of scrap coils, optical sensor rings glowing cobalt. A shivering 10-year-old child, LEO VANE, clutches a broken clockwork music box.
-            </p>
-            <div className={`p-3 rounded-xl border ${isDark ? 'bg-slate-900/80 border-slate-800 text-purple-200' : 'bg-purple-50 border-purple-200 text-purple-700'}`}>
-              <span className={`block text-[10px] font-bold ${textLabel}`}>KAELEN:</span>
-              "Thermal anomaly confirmed. My logic circuits... recommend silence."
+
+            {/* Right Column: Floating Agent Chips */}
+            <div className="lg:col-span-5 flex flex-col gap-3">
+              {[
+                {
+                  agent: 'Research Agent',
+                  color: 'bg-agent-research',
+                  tag: 'Lore & Dossiers',
+                  text: 'Synthesized New Aethelgard corporate laws & 2 character dossiers'
+                },
+                {
+                  agent: 'Story Agent',
+                  color: 'bg-agent-story',
+                  tag: '3-Act Screenplay',
+                  text: 'Act I inciting incident written with dramatic dialogue beats'
+                },
+                {
+                  agent: 'Visual Agent',
+                  color: 'bg-agent-visual',
+                  tag: 'Cinematography',
+                  text: '5-color obsidian swatch palette + 35mm anamorphic prompts'
+                },
+                {
+                  agent: 'Audio Agent',
+                  color: 'bg-agent-audio',
+                  tag: 'Score & Foley',
+                  text: 'Felt upright piano leitmotif & 5 categorized rain sound cues'
+                },
+                {
+                  agent: 'Critic Agent',
+                  color: 'bg-agent-critic',
+                  tag: 'Continuity Audit',
+                  text: 'Quality Index: 92/100 — Zero logic contradictions flagged'
+                },
+              ].map((chip, idx) => (
+                <motion.div
+                  key={idx}
+                  initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 * idx, duration: 0.4 }}
+                  className="card p-3.5 flex items-center justify-between gap-3 shadow-sm hover:border-border-hover transition-colors"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className={`w-2 h-2 rounded-full shrink-0 ${chip.color}`} />
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-semibold text-text1">{chip.agent}</span>
+                        <span className="text-[10px] text-text3 font-mono">[{chip.tag}]</span>
+                      </div>
+                      <p className="text-[11px] text-text2 truncate max-w-[280px] sm:max-w-xs">{chip.text}</p>
+                    </div>
+                  </div>
+                  <span className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 shrink-0">Done</span>
+                </motion.div>
+              ))}
             </div>
           </div>
         </div>
       </section>
 
-      {/* THE 5 AGENTS SHOWCASE */}
-      <section id="agents" className="relative z-10 py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-12">
-        <div className="text-center max-w-3xl mx-auto space-y-3">
-          <span className="text-xs font-bold uppercase tracking-wider text-purple-400">
-            Autonomous Creative Department
-          </span>
-          <h2 className={`text-3xl sm:text-4xl font-extrabold tracking-tight ${textPrimary}`}>
-            Meet Your Specialized AI Creative Crew
+      {/* ── BENTO FEATURES GRID ─────────────────────────────────────────── */}
+      <section id="features" className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-12">
+        <div className="max-w-2xl space-y-3">
+          <span className="label">Capabilities</span>
+          <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-text1">
+            Engineered for high-order creative production.
           </h2>
-          <p className={`text-sm sm:text-base ${textMuted}`}>
-            Each agent possesses distinct creative objectives, specialized prompts, and access to departmental outputs from previous stages.
+          <p className="text-sm sm:text-base text-text2">
+            Every layer of the platform is designed to replace disconnected prompt-engineering with structured, multi-departmental orchestration.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {[
-            { name: 'Research Agent', subtitle: 'World-Building & Lore Architect', icon: Brain, gradient: 'from-blue-600 to-cyan-500', shadowColor: 'shadow-blue-600/20', hoverBorder: 'hover:border-blue-500/40', desc: 'Grounds high-concept concepts with cohesive environmental lore, societal laws, technological boundaries, and psychologically rich character dossiers.', deliverables: ['Universal Laws & Factions', 'Multi-dimensional Character Dossiers', 'Scientific & Fantastical Frameworks'] },
-            { name: 'Story Agent', subtitle: 'Screenplay & Narrative Architect', icon: Feather, gradient: 'from-purple-600 to-pink-500', shadowColor: 'shadow-purple-600/20', hoverBorder: 'hover:border-purple-500/40', desc: 'Transforms world-building into cinematic treatments, 3-act narrative structures, sharp character dialogue, and chronological scene beats.', deliverables: ['High-Concept Loglines & Synopsis', 'Three-Act Progression Beats', 'Screenplay Scenes with Dialogue'] },
-            { name: 'Visual Agent', subtitle: 'Art Director & Concept Artist', icon: Palette, gradient: 'from-amber-500 to-rose-500', shadowColor: 'shadow-amber-600/20', hoverBorder: 'hover:border-amber-500/40', desc: 'Translates literary moments into visual aesthetics, selecting 5-color swatch palettes, cinematography lighting ratios, and ready-to-use Midjourney/Flux image prompts.', deliverables: ['5-Color Swatch Palette with Hexes', 'Midjourney v6 / Flux Prompt Catalog', 'Cinematography & Lenses Direction'] },
-            { name: 'Audio Agent', subtitle: 'Sound Designer & Music Supervisor', icon: Headphones, gradient: 'from-emerald-500 to-teal-400', shadowColor: 'shadow-emerald-600/20', hoverBorder: 'hover:border-emerald-500/40', desc: 'Directs the soundtrack philosophy, leitmotif instruments, scene-by-scene SFX soundscapes (Ambient, Foley, Action, Stingers), and voice casting cadence.', deliverables: ['Score Philosophy & Instrumentation', 'Categorized Sound Effects Catalog', 'Vocal Timbre & Casting Guidelines'] },
-            { name: 'Critic Agent', subtitle: 'Lead Editorial & Continuity Critic', icon: CheckCircle2, gradient: 'from-violet-600 to-indigo-500', shadowColor: 'shadow-purple-600/20', hoverBorder: 'hover:border-violet-500/40', desc: 'Audits all multi-departmental outputs for narrative continuity, pacing, character logic, and emotional resonance. Delivers an objective Quality Index (0-100).', deliverables: ['Continuity & Plothole Audit', 'Creative Quality Index (0–100)', 'Prioritized Editorial Recommendations'] },
-            { name: 'Human Director', subtitle: 'Executive Creator & Approver', icon: RefreshCw, gradient: 'from-purple-600/40 to-indigo-600/40', shadowColor: '', hoverBorder: '', isSpecial: true, desc: 'You maintain complete creative control. Edit any scene inline, request specific section regenerations, or approve deliverables for final export.', deliverables: ['Inline Script Editor', 'Target Section Regeneration', 'Export to PDF & Markdown'] },
-          ].map((agent, i) => {
-            const Icon = agent.icon;
-            const isSpecial = (agent as any).isSpecial;
+            {
+              icon: Brain,
+              title: 'Multi-Agent Orchestration',
+              desc: 'Autonomous CrewAI workflow where Research, Story, Visual, and Audio agents collaborate sequentially and share departmental memory context.'
+            },
+            {
+              icon: Cpu,
+              title: '100% Private & Local Inference',
+              desc: 'Powered natively by Ollama with Llama 3 and Mistral. Zero cloud LLM lock-in, recurring API subscriptions, or confidential lore leakage.'
+            },
+            {
+              icon: Sliders,
+              title: 'Human-in-the-Loop Director',
+              desc: 'Maintain authoritative creative control. Edit any scene inline, supply tailored director notes, and selectively regenerate sections.'
+            },
+            {
+              icon: FileText,
+              title: 'Production-Ready Pitch Bibles',
+              desc: 'Instantly compile your completed project into an industry-formatted PDF pitch bible, clean Markdown treatments, or print-ready decks.'
+            },
+            {
+              icon: Terminal,
+              title: 'Real-Time Streaming Telemetry',
+              desc: 'Inspect agent deliberations live via WebSockets. Monitor agent states, token activity, and inner chains of thought in real-time.'
+            },
+            {
+              icon: Layers,
+              title: 'Multimodal Synthesis',
+              desc: 'Generate cohesive 5-swatch color palettes with click-to-copy hex codes, FLUX.1 prompts, and categorized audio Foley cue soundboards.'
+            },
+          ].map((feat, i) => {
+            const Icon = feat.icon;
             return (
-              <div key={i} className={`p-6 rounded-3xl border transition-all flex flex-col justify-between space-y-4 ${
-                isSpecial
-                  ? isDark
-                    ? 'bg-gradient-to-br from-purple-950/40 to-[#0F1626] border-purple-500/30'
-                    : 'bg-gradient-to-br from-purple-50 to-white border-purple-200'
-                  : `${cardBg} ${cardBorder} ${agent.hoverBorder}`
-              }`}>
-                <div>
-                  <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${agent.gradient} flex items-center justify-center text-white mb-4 shadow-lg ${agent.shadowColor}`}>
-                    <Icon className="w-6 h-6" />
+              <div
+                key={i}
+                className="card p-6 flex flex-col justify-between space-y-4 hover:border-border-hover transition-colors"
+              >
+                <div className="space-y-3">
+                  <div className="w-10 h-10 rounded-xl bg-surface-muted flex items-center justify-center text-text1 border border-border">
+                    <Icon className="w-5 h-5 text-accent" />
                   </div>
-                  <h3 className={`font-bold text-lg ${textPrimary}`}>{agent.name}</h3>
-                  <span className={`text-xs font-semibold block mb-2 ${isSpecial ? 'text-purple-400' : 'text-purple-400'}`}>{agent.subtitle}</span>
-                  <p className={`text-xs leading-relaxed ${textMuted}`}>{agent.desc}</p>
-                </div>
-                <div className={`pt-3 border-t text-[11px] space-y-1 ${isDark ? 'border-slate-800' : 'border-slate-200'} ${isSpecial ? 'text-purple-400' : textMuted}`}>
-                  <span className={`font-bold block ${isSpecial ? 'text-purple-400' : textLabel}`}>
-                    {isSpecial ? 'CAPABILITIES:' : 'DELIVERABLES:'}
-                  </span>
-                  {agent.deliverables.map((d, j) => <div key={j}>&bull; {d}</div>)}
+                  <h3 className="text-base font-semibold text-text1">{feat.title}</h3>
+                  <p className="text-xs sm:text-sm text-text2 leading-relaxed">{feat.desc}</p>
                 </div>
               </div>
             );
@@ -327,143 +428,384 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </div>
       </section>
 
-      {/* PLAYGROUND / MEDIUM SHOWCASE */}
-      <section id="showcase" className="relative z-10 py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
-        <div className="text-center max-w-3xl mx-auto space-y-3">
-          <span className="text-xs font-bold uppercase tracking-wider text-purple-400">Creative Mediums</span>
-          <h2 className={`text-3xl sm:text-4xl font-extrabold tracking-tight ${textPrimary}`}>
-            Tailored For Every Storytelling Canvas
+      {/* ── STICKY VERTICAL SLIDING "HOW IT WORKS" STORY ───────────────── */}
+      <section id="how-it-works" className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-12">
+        <div className="max-w-2xl space-y-3">
+          <span className="label">Workflow</span>
+          <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-text1">
+            From raw spark to complete production bible.
           </h2>
-          <p className={`text-sm sm:text-base ${textMuted}`}>
-            Select a medium below to see real deliverables generated by the agent swarm.
+          <p className="text-sm sm:text-base text-text2">
+            Watch how specialized agents transform a one-sentence premise into a comprehensive cinematic asset package.
           </p>
         </div>
 
-        {/* Medium Tabs */}
-        <div className="flex justify-center">
-          <div className={`inline-flex p-1.5 rounded-2xl border text-xs sm:text-sm font-semibold ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-slate-100 border-slate-200'}`}>
-            {[
-              { id: 'film', label: 'Film & Cinema', icon: Film },
-              { id: 'game', label: 'Narrative RPG Game', icon: Gamepad2 },
-              { id: 'podcast', label: 'Audio Drama Podcast', icon: Mic },
-            ].map(({ id, label, icon: Icon }) => (
-              <button
-                key={id}
-                onClick={() => setActiveMediumTab(id as any)}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all ${
-                  activeMediumTab === id
-                    ? 'bg-purple-600 text-white shadow-lg'
-                    : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-800'
-                }`}
+        {/* Desktop Sticky Layout / Mobile Stacked Layout */}
+        <div ref={storyContainerRef} className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* Left Step Index (Sticky on Desktop) */}
+          <div className="lg:col-span-5 lg:sticky lg:top-24 space-y-3">
+            {workflowSteps.map((step, idx) => {
+              const isActive = activeStoryStep === idx;
+              return (
+                <button
+                  key={idx}
+                  onClick={() => setActiveStoryStep(idx)}
+                  className={`w-full text-left p-4 rounded-xl border transition-all flex items-start gap-3.5 ${
+                    isActive
+                      ? 'card border-accent/40 bg-surface shadow-sm'
+                      : 'border-transparent hover:bg-surface-muted text-text3 hover:text-text2'
+                  }`}
+                >
+                  <span className={`text-xs font-mono font-bold pt-0.5 ${isActive ? 'text-accent' : 'text-text3'}`}>
+                    {step.num}
+                  </span>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className={`w-2 h-2 rounded-full ${step.dotColor}`} />
+                      <h3 className={`text-sm font-semibold ${isActive ? 'text-text1' : 'text-text2'}`}>
+                        {step.title}
+                      </h3>
+                    </div>
+                    <p className="text-xs text-text3 mt-1 leading-relaxed">
+                      {step.desc}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Right Display Cards (Interactive Stack) */}
+          <div className="lg:col-span-7">
+            {(() => {
+              const step = workflowSteps[activeStoryStep];
+              return (
+                <div className="card p-6 sm:p-8 space-y-6 shadow-md border-border">
+                  <div className="flex items-center justify-between border-b border-border pb-4">
+                    <div className="flex items-center gap-2.5">
+                      <span className={`w-2.5 h-2.5 rounded-full ${step.dotColor}`} />
+                      <span className="text-xs font-semibold text-text1">{step.agent}</span>
+                      <span className="pill text-[10px]">{step.mockup.badge}</span>
+                    </div>
+                    <span className="text-xs font-mono text-text3">Step {step.num} of 05</span>
+                  </div>
+
+                  <div className="space-y-3">
+                    <h4 className="text-lg font-semibold text-text1">{step.mockup.name}</h4>
+                    <p className="text-xs font-medium text-accent">{step.mockup.role}</p>
+                    <div className="p-4 rounded-xl bg-surface-muted border border-border text-xs sm:text-sm text-text2 leading-relaxed">
+                      {step.mockup.details}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2 pt-2">
+                    {step.mockup.tags.map((tag, tIdx) => (
+                      <span key={tIdx} className="pill text-xs">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className="pt-2 flex items-center justify-between">
+                    <button
+                      onClick={() => setActiveStoryStep((prev) => (prev > 0 ? prev - 1 : 4))}
+                      className="text-xs text-text3 hover:text-text1 transition-colors"
+                    >
+                      &larr; Previous step
+                    </button>
+                    <button
+                      onClick={() => setActiveStoryStep((prev) => (prev < 4 ? prev + 1 : 0))}
+                      className="btn-ghost text-xs py-1.5 px-3"
+                    >
+                      <span>Next: {workflowSteps[(activeStoryStep + 1) % 5].title}</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+      </section>
+
+      {/* ── AGENT SWARM SHOWCASE ─────────────────────────────────────────── */}
+      <section id="agents" className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-12">
+        <div className="max-w-2xl space-y-3">
+          <span className="label">The Creative Crew</span>
+          <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-text1">
+            Meet your 5 specialized AI collaborators.
+          </h2>
+          <p className="text-sm sm:text-base text-text2">
+            Each agent possesses distinct creative objectives, departmental prompts, and shared access to project memory.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {[
+            {
+              name: 'Research Agent',
+              role: 'World-Building & Lore Architect',
+              dotColor: 'bg-agent-research',
+              icon: Brain,
+              desc: 'Establishes environmental physics, historical timelines, societal factions, and psychologically rich character dossiers.',
+              outputs: ['World lore & faction politics', 'Character profiles & psychology', 'Historical context bible']
+            },
+            {
+              name: 'Story Agent',
+              role: 'Screenplay & Narrative Architect',
+              dotColor: 'bg-agent-story',
+              icon: Feather,
+              desc: 'Translates world lore into dramatic 3-act narrative arcs, structured scene treatments, and sharp screenplay dialogue.',
+              outputs: ['3-Act structure beat sheet', 'Scene breakdowns & sluglines', 'Standard script dialogue']
+            },
+            {
+              name: 'Visual Agent',
+              role: 'Art Director & Concept Artist',
+              dotColor: 'bg-agent-visual',
+              icon: Palette,
+              desc: 'Directs the aesthetic look, assembling 5-swatch color palettes, lighting ratios, and ready-to-render Midjourney/FLUX prompts.',
+              outputs: ['5-swatch palette with hex codes', 'Midjourney v6 / FLUX prompts', 'Cinematography camera cues']
+            },
+            {
+              name: 'Audio Agent',
+              role: 'Sound Designer & Music Supervisor',
+              dotColor: 'bg-agent-audio',
+              icon: Headphones,
+              desc: 'Curates the acoustic universe: score instrumentation, character leitmotifs, and categorized atmospheric Foley soundscapes.',
+              outputs: ['Score philosophy & themes', 'Categorized SFX soundboard', 'Vocal cadence & casting tone']
+            },
+            {
+              name: 'Critic Agent',
+              role: 'Lead Editorial & Continuity Critic',
+              dotColor: 'bg-agent-critic',
+              icon: CheckCircle2,
+              desc: 'Audits continuity, plot holes, and character voice consistency across all departments, awarding an objective Quality Index (0-100).',
+              outputs: ['Continuity audit & plothole check', 'Quality Index score (0-100)', 'Targeted director notes']
+            },
+            {
+              name: 'Human Director',
+              role: 'Executive Creator & Approver',
+              dotColor: 'bg-accent',
+              icon: Sliders,
+              desc: 'You maintain ultimate creative authority. Edit any scene inline, request targeted section regenerations, or approve for export.',
+              outputs: ['Inline scene beat editor', 'Selective section regeneration', 'Vector PDF & Markdown export']
+            },
+          ].map((agent, i) => {
+            const Icon = agent.icon;
+            return (
+              <div
+                key={i}
+                className="card p-6 flex flex-col justify-between space-y-5 hover:border-border-hover transition-colors"
               >
-                <Icon className="w-4 h-4" />
-                <span>{label}</span>
-              </button>
-            ))}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="w-10 h-10 rounded-xl bg-surface-muted flex items-center justify-center text-text1 border border-border">
+                      <Icon className="w-5 h-5 text-text1" />
+                    </div>
+                    <span className="flex items-center gap-1.5 text-xs text-text3 font-medium">
+                      <span className={`w-2 h-2 rounded-full ${agent.dotColor}`} />
+                      Autonomous
+                    </span>
+                  </div>
+
+                  <div>
+                    <h3 className="text-base font-semibold text-text1">{agent.name}</h3>
+                    <p className="text-xs text-accent font-medium mt-0.5">{agent.role}</p>
+                  </div>
+
+                  <p className="text-xs text-text2 leading-relaxed">{agent.desc}</p>
+                </div>
+
+                <div className="pt-3 border-t border-border space-y-1.5">
+                  <span className="label block text-[10px]">Deliverables</span>
+                  {agent.outputs.map((out, oIdx) => (
+                    <div key={oIdx} className="text-[11px] text-text3 flex items-center gap-1.5">
+                      <span className="w-1 h-1 rounded-full bg-text3" />
+                      <span>{out}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ── PLAYGROUND PREVIEW ───────────────────────────────────────────── */}
+      <section id="playground" className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-10">
+        <div className="text-center max-w-2xl mx-auto space-y-3">
+          <span className="label">Live Playground</span>
+          <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-text1">
+            Explore sample production deliverables.
+          </h2>
+          <p className="text-sm sm:text-base text-text2">
+            Toggle between formats below to inspect real outputs generated by the SwarmStudio agent team.
+          </p>
+
+          {/* Medium Tabs */}
+          <div className="pt-4 flex justify-center">
+            <div className="inline-flex p-1 rounded-full bg-surface-muted border border-border text-xs font-medium">
+              {[
+                { id: 'film', label: 'Film & Cinema', icon: Film },
+                { id: 'game', label: 'Narrative RPG Game', icon: Gamepad2 },
+                { id: 'podcast', label: 'Audio Drama Podcast', icon: Mic },
+              ].map(({ id, label, icon: Icon }) => (
+                <button
+                  key={id}
+                  onClick={() => setActiveMediumTab(id as any)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${
+                    activeMediumTab === id
+                      ? 'bg-surface text-text1 shadow-sm font-semibold'
+                      : 'text-text3 hover:text-text1'
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  <span>{label}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Medium Showcase Card */}
+        {/* Deliverable Mockup Window */}
         {(() => {
           const item = mediumShowcase[activeMediumTab];
           return (
-            <div className={`max-w-4xl mx-auto p-6 sm:p-8 rounded-3xl border shadow-xl space-y-6 text-left ${cardBg} ${isDark ? 'border-purple-500/20' : 'border-purple-200'}`}>
-              <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b pb-4 ${isDark ? 'border-slate-800' : 'border-slate-200'}`}>
-                <div>
-                  <span className="text-xs font-bold text-purple-400 uppercase tracking-wider">{item.genre}</span>
-                  <h3 className={`text-xl font-bold mt-0.5 ${textPrimary}`}>{item.title}</h3>
+            <div className="max-w-4xl mx-auto card overflow-hidden shadow-md border-border">
+              {/* Window Chrome */}
+              <div className="px-5 py-3.5 bg-surface-muted border-b border-border flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-text3/30" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-text3/30" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-text3/30" />
+                  <span className="ml-2 text-xs font-mono text-text3">SwarmStudio &mdash; {item.title}</span>
                 </div>
-                <span className={`px-3 py-1 rounded-full text-xs font-medium self-start sm:self-auto ${isDark ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-600'}`}>
-                  Tone: {item.tone}
-                </span>
+                <span className="pill text-[10px]">{item.genre}</span>
               </div>
 
-              <div className={`p-4 rounded-2xl border italic text-sm leading-relaxed ${codeBg} ${codeBorder} ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
-                "{item.logline}"
-              </div>
+              {/* Workspace Content */}
+              <div className="p-6 sm:p-8 space-y-6">
+                <div>
+                  <span className="label block text-[10px]">Logline</span>
+                  <blockquote className="text-sm sm:text-base text-text1 italic font-serif leading-relaxed mt-1">
+                    "{item.logline}"
+                  </blockquote>
+                </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                {item.agentsOutput.map((out, idx) => (
-                  <div key={idx} className={`p-3.5 rounded-xl border space-y-1 ${isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
-                    <span className="font-bold text-purple-400 block">{out.label}</span>
-                    <p className={`text-[11px] leading-snug ${textSecondary}`}>{out.text}</p>
-                  </div>
-                ))}
-              </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  {item.agentsOutput.map((out, idx) => (
+                    <div key={idx} className="p-3.5 rounded-xl bg-surface-muted/60 border border-border space-y-1">
+                      <span className="font-semibold text-text1 block">{out.label}</span>
+                      <p className="text-[11px] text-text2 leading-snug">{out.text}</p>
+                    </div>
+                  ))}
+                </div>
 
-              <div className="pt-2 text-center">
-                <button
-                  onClick={onEnterStudio}
-                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-purple-600 hover:bg-purple-500 shadow-md shadow-purple-900/30 transition-all"
-                >
-                  <span>Build A {item.title} Project</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
+                <div className="pt-2 flex items-center justify-between border-t border-border">
+                  <span className="text-xs text-text3 font-medium">Tone: {item.tone}</span>
+                  <button
+                    onClick={onEnterStudio}
+                    className="btn-primary text-xs py-2 px-4"
+                  >
+                    <span>Build A {item.title} Project</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             </div>
           );
         })()}
       </section>
 
-      {/* WORKFLOW PIPELINE SECTION */}
-      <section id="workflow" className="relative z-10 py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-12">
-        <div className="text-center max-w-3xl mx-auto space-y-3">
-          <span className="text-xs font-bold uppercase tracking-wider text-purple-400">How It Works</span>
-          <h2 className={`text-3xl sm:text-4xl font-extrabold tracking-tight ${textPrimary}`}>
-            From Raw Prompt to Production Bible
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 max-w-5xl mx-auto text-left">
-          {[
-            { step: '01', title: 'Enter Creative Spark', desc: 'Type your core premise, select Film, Game, or Podcast, and set tone, genre, and target audience.' },
-            { step: '02', title: 'Swarm Orchestration', desc: 'Research & Story agents establish the world lore and write the script, feeding context directly to Visual and Audio agents.' },
-            { step: '03', title: 'Critic Continuity Check', desc: 'Critic Agent audits the entire collaborative package, flags subtleties, and assigns an objective Quality Score.' },
-            { step: '04', title: 'Refine & Export', desc: 'Edit scripts inline, regenerate sections on demand, and export production-ready PDFs or Markdown treatments.' },
-          ].map((s, idx) => (
-            <div key={idx} className={`p-6 rounded-3xl border space-y-3 relative ${cardBg} ${cardBorder}`}>
-              <div className={`text-3xl font-black ${isDark ? 'text-purple-500/40' : 'text-purple-300/60'}`}>{s.step}</div>
-              <h3 className={`font-bold text-base ${textPrimary}`}>{s.title}</h3>
-              <p className={`text-xs leading-relaxed ${textMuted}`}>{s.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* FINAL CALL TO ACTION */}
-      <section className="relative z-10 py-20 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto text-center">
-        <div className={`rounded-3xl p-8 sm:p-14 border shadow-2xl relative overflow-hidden ${isDark ? 'bg-gradient-to-r from-purple-900/50 via-indigo-900/40 to-purple-900/50 border-purple-500/40' : 'bg-gradient-to-r from-purple-100 via-indigo-50 to-purple-100 border-purple-200'}`}>
-          <div className="relative z-10 space-y-6 max-w-2xl mx-auto">
-            <h2 className={`text-3xl sm:text-4xl font-extrabold tracking-tight ${textPrimary}`}>
+      {/* ── FINAL CTA BAND ──────────────────────────────────────────────── */}
+      <section className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
+        <div className="card-dark p-8 sm:p-14 lg:p-16 rounded-[28px] sm:rounded-[32px] text-center space-y-6 shadow-md">
+          <div className="space-y-3 max-w-xl mx-auto">
+            <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-white">
               Ready to assemble your AI creative team?
             </h2>
-            <p className={`text-sm sm:text-base leading-relaxed ${isDark ? 'text-purple-200' : 'text-purple-700'}`}>
-              Join SwarmStudio today to turn simple thoughts into fully-realized cinematic scripts, lore bibles, and concept prompt sheets.
+            <p className="text-sm sm:text-base text-white/80 leading-relaxed">
+              Turn simple premises into production-ready scripts, visual palettes, and soundscapes in minutes.
             </p>
-            <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
-              <button
-                onClick={onEnterStudio}
-                className="flex items-center gap-2 px-8 py-3.5 rounded-2xl font-bold text-sm text-white bg-purple-600 hover:bg-purple-500 shadow-xl shadow-purple-950/60 border border-purple-400/40 transition-all hover:scale-[1.02]"
-              >
-                <img src="/logo.jpg" alt="" className="w-5 h-5 rounded-lg" />
-                <span>Launch Studio Now</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
+          </div>
+
+          <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
+            <button
+              onClick={onEnterStudio}
+              className="inline-flex items-center gap-2 bg-white text-text1 font-semibold text-sm px-6 py-3 rounded-full hover:bg-white/90 transition-colors shadow-sm"
+            >
+              <span>Launch Studio Now</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer className={`relative z-10 border-t py-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs ${isDark ? 'border-slate-800 text-slate-500' : 'border-slate-200 text-slate-400'}`}>
-        <div className="flex items-center gap-2">
-          <img src="/logo.jpg" alt="SwarmStudio" className="w-5 h-5 rounded-md" />
-          <span className={`font-bold ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>SwarmStudio</span>
-          <span>&bull;</span>
-          <span>Autonomous Multi-Agent Creative Collaboration Platform</span>
+      {/* ── FOOTER ──────────────────────────────────────────────────────── */}
+      <footer className="border-t border-border py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-xs text-text3 space-y-10">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
+          {/* Brand Info */}
+          <div className="col-span-2 space-y-3">
+            <div className="flex items-center gap-2.5">
+              <div className="w-6 h-6 rounded-md overflow-hidden border border-border">
+                <img src="/logo.jpg" alt="SwarmStudio" className="w-full h-full object-cover" />
+              </div>
+              <span className="font-semibold text-sm text-text1">SwarmStudio</span>
+            </div>
+            <p className="text-xs text-text2 max-w-xs leading-relaxed">
+              The autonomous multi-agent creative studio. Transform premises into screenplays, visual palettes, and acoustic score treatments.
+            </p>
+            <div className="pt-1 flex items-center gap-4 text-text3">
+              <a href="#" className="hover:text-text1 transition-colors">GitHub</a>
+              <a href="#" className="hover:text-text1 transition-colors">Twitter</a>
+              <a href="#" className="hover:text-text1 transition-colors">Discord</a>
+            </div>
+          </div>
+
+          {/* Product Links */}
+          <div className="space-y-2.5">
+            <span className="font-semibold text-text1 block text-xs">Product</span>
+            <ul className="space-y-2">
+              <li><a href="#features" className="hover:text-text1 transition-colors">Features</a></li>
+              <li><a href="#how-it-works" className="hover:text-text1 transition-colors">How It Works</a></li>
+              <li><a href="#agents" className="hover:text-text1 transition-colors">Agent Swarm</a></li>
+              <li><a href="#playground" className="hover:text-text1 transition-colors">Playground</a></li>
+            </ul>
+          </div>
+
+          {/* Resources Links */}
+          <div className="space-y-2.5">
+            <span className="font-semibold text-text1 block text-xs">Resources</span>
+            <ul className="space-y-2">
+              <li><a href="#" className="hover:text-text1 transition-colors">Documentation</a></li>
+              <li><a href="#" className="hover:text-text1 transition-colors">Ollama Setup</a></li>
+              <li><a href="#" className="hover:text-text1 transition-colors">Model Compatibility</a></li>
+              <li><a href="#" className="hover:text-text1 transition-colors">Changelog</a></li>
+            </ul>
+          </div>
+
+          {/* Legal Links */}
+          <div className="space-y-2.5">
+            <span className="font-semibold text-text1 block text-xs">Legal</span>
+            <ul className="space-y-2">
+              <li><a href="#" className="hover:text-text1 transition-colors">Privacy Policy</a></li>
+              <li><a href="#" className="hover:text-text1 transition-colors">Terms of Service</a></li>
+              <li><a href="#" className="hover:text-text1 transition-colors">Security</a></li>
+              <li><a href="#" className="hover:text-text1 transition-colors">License</a></li>
+            </ul>
+          </div>
         </div>
-        <div>
-          <span>Powered by CrewAI, Ollama & React &bull; 2026</span>
+
+        {/* Bottom Bar */}
+        <div className="pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p>&copy; {new Date().getFullYear()} SwarmStudio. All rights reserved.</p>
+          <div className="flex items-center gap-4">
+            <span>Built with CrewAI, FastAPI & React</span>
+            <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              Systems Operational
+            </span>
+          </div>
         </div>
       </footer>
     </div>

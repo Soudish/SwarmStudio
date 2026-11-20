@@ -35,22 +35,6 @@
 
   --scrollbar-track: #F6F6F7;
   --scrollbar-thumb: #D4D4D9;
-
-  /* Backward compatibility for intermediate stages */
-  --bg-primary: var(--bg);
-  --bg-secondary: var(--surface);
-  --bg-card: var(--surface);
-  --bg-surface: var(--surface-muted);
-  --bg-hover: var(--surface-muted);
-  --bg-input: var(--surface);
-  --text-primary: var(--text-1);
-  --text-secondary: var(--text-2);
-  --text-muted: var(--text-3);
-  --border-primary: var(--border);
-  --border-accent: rgba(109, 91, 208, 0.2);
-  --glass-bg: rgba(255, 255, 255, 0.85);
-  --glass-border: var(--border);
-  --selection-bg: var(--accent-tint);
 }
 
 /* ═══════════════════════════════════════════
@@ -78,22 +62,6 @@
 
   --scrollbar-track: #0B0B0E;
   --scrollbar-thumb: #282830;
-
-  /* Backward compatibility for intermediate stages */
-  --bg-primary: var(--bg);
-  --bg-secondary: var(--surface);
-  --bg-card: var(--surface);
-  --bg-surface: var(--surface-muted);
-  --bg-hover: var(--surface-muted);
-  --bg-input: var(--surface);
-  --text-primary: var(--text-1);
-  --text-secondary: var(--text-2);
-  --text-muted: var(--text-3);
-  --border-primary: var(--border);
-  --border-accent: rgba(139, 127, 232, 0.2);
-  --glass-bg: rgba(20, 20, 24, 0.85);
-  --glass-border: var(--border);
-  --selection-bg: var(--accent-tint);
 }
 
 @layer base {
