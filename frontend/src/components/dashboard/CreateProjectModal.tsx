@@ -112,16 +112,12 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
 
         {/* Modal Header */}
         <div className="mb-6">
-          <span className="label">New Creative Concept</span>
-          <h2 className="text-xl font-bold tracking-tight text-text1 mt-1">Deploy Multi-Agent Swarm</h2>
-          <p className="text-xs text-text2 mt-0.5">
-            Provide a premise and let our 5 specialized agents develop lore, screenplay, art, and music.
-          </p>
+          <h2 className="text-xl font-bold tracking-tight text-text1">New Project</h2>
         </div>
 
         {/* Quick Inspiration Chips */}
         <div className="mb-6">
-          <span className="label block mb-2">Quick Inspiration Templates</span>
+          <span className="label block mb-2">Templates</span>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             {quickTemplates.map((t, idx) => (
               <button
@@ -230,7 +226,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
               className="flex items-center gap-1.5 text-xs font-medium text-text2 hover:text-text1 transition-colors"
             >
               <Sliders className="w-3.5 h-3.5 text-text3" />
-              <span>{showAdvanced ? 'Hide advanced directives' : 'Advanced directives & model'}</span>
+              <span>{showAdvanced ? 'Hide options' : 'Advanced options'}</span>
               {showAdvanced ? <ChevronUp className="w-3.5 h-3.5 text-text3" /> : <ChevronDown className="w-3.5 h-3.5 text-text3" />}
             </button>
           </div>
@@ -249,7 +245,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
               </div>
 
               <div>
-                <label className="label block mb-1">Custom Agent Directives</label>
+                <label className="label block mb-1">Custom Directives</label>
                 <textarea
                   rows={2}
                   value={instructions}
@@ -260,7 +256,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
               </div>
 
               <div>
-                <label className="label block mb-1">LLM Model Override</label>
+                <label className="label block mb-1">Model Override</label>
                 <input
                   type="text"
                   value={selectedModel}
@@ -290,12 +286,12 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
               {isSubmitting ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>Deploying Swarm...</span>
+                  <span>Creating...</span>
                 </>
               ) : (
                 <>
                   <Sparkles className="w-4 h-4" />
-                  <span>Start AI Collaboration</span>
+                  <span>Create Project</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </>
               )}

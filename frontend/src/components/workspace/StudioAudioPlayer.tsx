@@ -218,12 +218,8 @@ export const StudioAudioPlayer: React.FC<StudioAudioPlayerProps> = ({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-base font-bold text-text1">Soundtrack & Audio Studio</h3>
-              <span className="pill text-[10px] pill-accent">Active Audio Engine</span>
+              <h3 className="text-base font-bold text-text1">Audio Studio</h3>
             </div>
-            <p className="text-xs text-text3 mt-0.5">
-              Harmonic atmosphere synthesis and 16-bit stereo master track rendering.
-            </p>
           </div>
         </div>
 
@@ -241,7 +237,7 @@ export const StudioAudioPlayer: React.FC<StudioAudioPlayerProps> = ({
             ) : (
               <>
                 <Wand2 className="w-3.5 h-3.5" />
-                <span>Generate .WAV Track</span>
+                <span>Generate Audio</span>
               </>
             )}
           </button>
@@ -299,12 +295,12 @@ export const StudioAudioPlayer: React.FC<StudioAudioPlayerProps> = ({
               {isPlayingSynth ? (
                 <>
                   <Square className="w-3.5 h-3.5 fill-current" />
-                  <span>Stop Stream</span>
+                  <span>Stop</span>
                 </>
               ) : (
                 <>
                   <Play className="w-3.5 h-3.5 fill-current" />
-                  <span>Play Stream: {currentTrackName}</span>
+                  <span>Play: {currentTrackName}</span>
                 </>
               )}
             </button>

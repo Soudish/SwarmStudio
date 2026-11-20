@@ -7,17 +7,16 @@ import {
   Settings as SettingsIcon,
   Plus,
   Cpu,
-  Globe,
   LogOut,
   ChevronDown,
-  ChevronLeft,
-  ChevronRight,
   Sun,
   Moon,
   Menu,
   X,
-  Sparkles,
-  User as UserIcon
+  PanelLeftClose,
+  PanelLeftOpen,
+  ArrowLeft,
+  User as UserIcon,
 } from 'lucide-react';
 import { SettingsData, ProjectData, User } from '../../types';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -43,7 +42,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   currentUser,
   onOpenAuth,
   onLogout,
-  onGoToLanding
+  onGoToLanding,
 }) => {
   const [collapsed, setCollapsed] = useState<boolean>(() => {
     try {
@@ -67,6 +66,18 @@ export const Navbar: React.FC<NavbarProps> = ({
       localStorage.setItem('swarmstudio-sidebar-collapsed', String(collapsed));
     } catch {}
   }, [collapsed]);
+
+  // Keyboard shortcut Ctrl/Cmd+B toggles collapsed sidebar
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        setCollapsed((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -97,68 +108,86 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Top section: Brand + Collapse + New Project CTA + Nav */}
       <div className="space-y-4">
         {/* Brand Header */}
-        <div className="flex items-center justify-between pb-2 border-b border-border">
-          <div
-            onClick={() => handleNavClick('dashboard')}
-            className="flex items-center gap-3 cursor-pointer group min-w-0"
-          >
-            <div className="w-8 h-8 rounded-xl overflow-hidden border border-border shrink-0 bg-surface-muted flex items-center justify-center">
-              <img src="/logo.jpg" alt="Logo" className="w-full h-full object-cover" />
-            </div>
-            {!collapsed && (
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <span className="font-semibold text-sm tracking-tight text-text1 truncate">
-                    SwarmStudio
-                  </span>
-                  <span className="pill text-[10px] px-1.5 py-0.2">v1.0</span>
-                </div>
-                <p className="text-[11px] text-text3 truncate">AI Creative Studio</p>
-              </div>
-            )}
+        {collapsed ? (
+          <div className="flex flex-col items-center gap-2 pb-3 border-b border-border">
+            <button
+              onClick={onGoToLanding}
+              className="w-9 h-9 rounded-xl overflow-hidden border border-border shrink-0 bg-surface-muted flex items-center justify-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent/50 transition-transform hover:scale-105 active:scale-95"
+              title="Back to Landing Page"
+              aria-label="Back to Landing Page"
+            >
+              <img src="/logo.jpg" alt="SwarmStudio" className="w-full h-full object-cover" />
+            </button>
+
+            <button
+              onClick={() => setCollapsed(false)}
+              className="hidden md:flex w-9 h-9 rounded-lg text-text3 hover:text-text1 hover:bg-surface-muted items-center justify-center transition-colors"
+              title="Expand sidebar (Ctrl+B)"
+              aria-label="Expand sidebar"
+            >
+              <PanelLeftOpen className="w-5 h-5" />
+            </button>
           </div>
+        ) : (
+          <div className="flex items-center justify-between pb-3 border-b border-border">
+            <button
+              onClick={onGoToLanding}
+              className="flex items-center gap-3 cursor-pointer group min-w-0 text-left focus:outline-none focus:ring-2 focus:ring-accent/50 rounded-xl p-1 -m-1 transition-transform active:scale-95"
+              title="Back to Landing Page"
+            >
+              <div className="w-9 h-9 rounded-xl overflow-hidden border border-border shrink-0 bg-surface-muted flex items-center justify-center transition-transform group-hover:scale-105">
+                <img src="/logo.jpg" alt="SwarmStudio" className="w-full h-full object-cover" />
+              </div>
+              <div className="min-w-0">
+                <span className="font-semibold text-base tracking-tight text-text1 truncate block">
+                  SwarmStudio
+                </span>
+              </div>
+            </button>
 
-          {/* Desktop collapse toggle */}
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="hidden md:flex p-1.5 rounded-lg text-text3 hover:text-text1 hover:bg-surface-muted transition-colors"
-            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          >
-            {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-          </button>
+            {/* Desktop 36px toggle */}
+            <button
+              onClick={() => setCollapsed(true)}
+              className="hidden md:flex w-9 h-9 rounded-lg text-text3 hover:text-text1 hover:bg-surface-muted items-center justify-center transition-colors"
+              title="Collapse sidebar (Ctrl+B)"
+              aria-label="Collapse sidebar"
+            >
+              <PanelLeftClose className="w-5 h-5" />
+            </button>
 
-          {/* Mobile close button */}
-          <button
-            onClick={() => setMobileOpen(false)}
-            className="md:hidden p-1.5 rounded-lg text-text3 hover:text-text1 hover:bg-surface-muted"
-            aria-label="Close menu"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+            {/* Mobile close button */}
+            <button
+              onClick={() => setMobileOpen(false)}
+              className="md:hidden w-9 h-9 rounded-lg text-text3 hover:text-text1 hover:bg-surface-muted flex items-center justify-center"
+              aria-label="Close menu"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        )}
 
         {/* New Project Primary CTA */}
         {collapsed ? (
           <button
             onClick={onOpenCreateModal}
-            className="w-10 h-10 mx-auto rounded-full bg-text1 text-surface flex items-center justify-center hover:opacity-90 transition-transform active:scale-95 shadow-sm"
-            title="Create New Project"
+            className="w-11 h-11 mx-auto rounded-xl bg-text1 text-surface flex items-center justify-center hover:opacity-90 transition-transform active:scale-95 shadow-sm"
+            title="New Project"
+            aria-label="New Project"
           >
             <Plus className="w-5 h-5" />
           </button>
         ) : (
           <button
             onClick={onOpenCreateModal}
-            className="btn-primary w-full shadow-sm text-xs justify-center"
+            className="btn-primary w-full shadow-sm text-sm h-11 justify-center gap-2 font-medium"
           >
             <Plus className="w-4 h-4" />
             <span>New Project</span>
           </button>
         )}
 
-        {/* Navigation Items */}
-        <nav className="space-y-1">
+        {/* Navigation Items — 15px text, 20px icons, ~44px height */}
+        <nav className="space-y-1.5">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentTab === item.id;
@@ -167,18 +196,18 @@ export const Navbar: React.FC<NavbarProps> = ({
                 key={item.id}
                 onClick={() => handleNavClick(item.id)}
                 title={collapsed ? item.label : undefined}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all relative ${
+                className={`w-full flex items-center gap-3.5 rounded-xl text-[15px] font-medium transition-all relative h-11 ${
                   isActive
-                    ? 'bg-accent-tint text-accent-text font-semibold'
+                    ? 'bg-accent-tint text-accent-text font-semibold shadow-sm'
                     : 'text-text2 hover:text-text1 hover:bg-surface-muted'
-                } ${collapsed ? 'justify-center px-0' : ''}`}
+                } ${collapsed ? 'justify-center px-0 w-11 mx-auto' : 'px-3.5'}`}
               >
-                <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-accent' : 'text-text3'}`} />
+                <Icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-accent' : 'text-text3'}`} />
                 {!collapsed && <span className="truncate">{item.label}</span>}
                 {item.badge && (
                   <span
-                    className={`w-2 h-2 rounded-full bg-accent animate-ping absolute ${
-                      collapsed ? 'top-1 right-1' : 'right-3'
+                    className={`w-2.5 h-2.5 rounded-full bg-accent animate-ping absolute ${
+                      collapsed ? 'top-1.5 right-1.5' : 'right-3.5'
                     }`}
                   />
                 )}
@@ -190,22 +219,22 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Bottom section: Engine status, theme, landing, user */}
       <div className="space-y-3 pt-3 border-t border-border">
-        {/* Model status pill */}
+        {/* Model status pill (compact row with dot — ONLY place model is shown) */}
         <button
           onClick={() => handleNavClick('settings')}
-          className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl border border-border text-xs text-text2 hover:border-border-hover bg-surface-muted transition-colors ${
-            collapsed ? 'justify-center px-0' : ''
+          className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl border border-border text-xs text-text2 hover:border-border-hover bg-surface-muted/60 transition-colors ${
+            collapsed ? 'justify-center px-0 w-11 h-10 mx-auto' : 'h-10'
           }`}
           title={
             isOllamaOnline
-              ? `Connected: ${settings?.ollama_model}`
-              : 'Ollama offline (using smart fallback)'
+              ? `Model: ${settings?.ollama_model || 'llama3.2'} (Online)`
+              : 'Ollama offline (smart fallback)'
           }
         >
-          <Cpu className="w-3.5 h-3.5 text-text3 shrink-0" />
+          <Cpu className="w-4 h-4 text-text3 shrink-0" />
           {!collapsed && (
-            <span className="truncate flex-1 text-left text-[11px]">
-              {settings?.ollama_model || 'Ollama'}
+            <span className="truncate flex-1 text-left text-xs font-mono">
+              {settings?.ollama_model || 'llama3.2'}
             </span>
           )}
           <span
@@ -215,24 +244,29 @@ export const Navbar: React.FC<NavbarProps> = ({
           />
         </button>
 
-        {/* Utility row: Theme toggle & Landing */}
-        <div className={`flex items-center gap-1.5 ${collapsed ? 'flex-col' : 'justify-between'}`}>
+        {/* Secondary items: Dark Mode (14px) & Back to Site (14px) */}
+        <div className={`space-y-1 ${collapsed ? 'flex flex-col items-center' : ''}`}>
           <button
             onClick={toggleTheme}
-            className="p-2 rounded-xl text-text2 hover:text-text1 hover:bg-surface-muted transition-colors flex items-center gap-2 text-xs"
+            className={`flex items-center gap-3 text-sm font-medium text-text2 hover:text-text1 hover:bg-surface-muted transition-colors rounded-xl h-10 ${
+              collapsed ? 'w-11 justify-center' : 'w-full px-3'
+            }`}
             title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
           >
-            {isDark ? <Sun className="w-4 h-4 text-amber-500" /> : <Moon className="w-4 h-4" />}
-            {!collapsed && <span className="text-[11px]">{isDark ? 'Light Mode' : 'Dark Mode'}</span>}
+            {isDark ? <Sun className="w-4 h-4 text-amber-500 shrink-0" /> : <Moon className="w-4 h-4 text-text3 shrink-0" />}
+            {!collapsed && <span>{isDark ? 'Light Mode' : 'Dark Mode'}</span>}
           </button>
 
           <button
             onClick={onGoToLanding}
-            className="p-2 rounded-xl text-text2 hover:text-text1 hover:bg-surface-muted transition-colors flex items-center gap-1.5 text-xs"
-            title="View Public Landing Page"
+            className={`flex items-center gap-3 text-sm font-medium text-text2 hover:text-text1 hover:bg-surface-muted transition-colors rounded-xl h-10 ${
+              collapsed ? 'w-11 justify-center' : 'w-full px-3'
+            }`}
+            title="Back to Site"
+            aria-label="Back to Site"
           >
-            <Globe className="w-4 h-4" />
-            {!collapsed && <span className="text-[11px]">Site</span>}
+            <ArrowLeft className="w-4 h-4 text-text3 shrink-0" />
+            {!collapsed && <span>Back to Site</span>}
           </button>
         </div>
 
@@ -242,7 +276,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               onClick={() => setUserDropdownOpen(!userDropdownOpen)}
               className={`w-full flex items-center gap-2 p-1.5 rounded-xl border border-border hover:border-border-hover transition-colors bg-surface text-text1 ${
-                collapsed ? 'justify-center p-1' : ''
+                collapsed ? 'justify-center p-1 w-11 mx-auto' : ''
               }`}
             >
               <div className="w-7 h-7 rounded-full bg-accent-tint text-accent-text flex items-center justify-center font-semibold text-xs shrink-0">
@@ -276,7 +310,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   className="w-full text-left px-3 py-1.5 rounded-lg text-xs text-text2 hover:text-text1 hover:bg-surface-muted flex items-center gap-2"
                 >
                   <FolderKanban className="w-3.5 h-3.5 text-text3" />
-                  <span>My Saved Works</span>
+                  <span>My Projects</span>
                 </button>
                 <button
                   onClick={() => {
@@ -285,8 +319,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                   }}
                   className="w-full text-left px-3 py-1.5 rounded-lg text-xs text-text2 hover:text-text1 hover:bg-surface-muted flex items-center gap-2"
                 >
-                  <Globe className="w-3.5 h-3.5 text-text3" />
-                  <span>Public Landing Page</span>
+                  <ArrowLeft className="w-3.5 h-3.5 text-text3" />
+                  <span>Back to Site</span>
                 </button>
                 <button
                   onClick={() => {
@@ -306,8 +340,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             {collapsed ? (
               <button
                 onClick={() => onOpenAuth('login')}
-                className="w-8 h-8 mx-auto rounded-full border border-border flex items-center justify-center text-text2 hover:text-text1"
+                className="w-10 h-10 mx-auto rounded-full border border-border flex items-center justify-center text-text2 hover:text-text1"
                 title="Sign In"
+                aria-label="Sign In"
               >
                 <UserIcon className="w-4 h-4" />
               </button>
@@ -337,17 +372,22 @@ export const Navbar: React.FC<NavbarProps> = ({
     <>
       {/* Mobile Top Header */}
       <header className="md:hidden sticky top-0 z-40 w-full border-b border-border bg-surface/90 backdrop-blur-md px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2.5" onClick={() => onSelectTab('dashboard')}>
+        <button
+          onClick={onGoToLanding}
+          className="flex items-center gap-2.5 text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent/50 rounded-lg p-1 -m-1"
+          title="Back to Landing Page"
+        >
           <div className="w-7 h-7 rounded-lg overflow-hidden border border-border shrink-0">
             <img src="/logo.jpg" alt="Logo" className="w-full h-full object-cover" />
           </div>
           <span className="font-semibold text-sm tracking-tight text-text1">SwarmStudio</span>
-        </div>
+        </button>
         <div className="flex items-center gap-2">
           <button
             onClick={onOpenCreateModal}
             className="w-8 h-8 rounded-full bg-text1 text-surface flex items-center justify-center text-xs"
             title="Create Project"
+            aria-label="Create Project"
           >
             <Plus className="w-4 h-4" />
           </button>
@@ -374,10 +414,10 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       )}
 
-      {/* Desktop Persistent Sidebar */}
+      {/* Desktop Persistent Sidebar — smooth 250ms width transition */}
       <aside
-        className={`hidden md:flex flex-col shrink-0 sticky top-0 h-screen border-r border-border bg-surface z-30 transition-all duration-200 ${
-          collapsed ? 'w-[72px]' : 'w-[248px]'
+        className={`hidden md:flex flex-col shrink-0 sticky top-0 h-screen border-r border-border bg-surface z-30 transition-[width] duration-250 ease-in-out ${
+          collapsed ? 'w-[72px]' : 'w-[260px]'
         }`}
       >
         {sidebarContent}
@@ -386,34 +426,91 @@ export const Navbar: React.FC<NavbarProps> = ({
   );
 };
 
-export const Topbar: React.FC<{
+export interface TopbarProps {
   currentTab: string;
   activeProject: ProjectData | null;
-  settings: SettingsData | null;
+  projects?: ProjectData[];
+  onSelectProject?: (p: ProjectData) => void;
+  settings?: SettingsData | null;
   onOpenCreateModal?: () => void;
-}> = ({ currentTab, activeProject, settings, onOpenCreateModal }) => {
-  const titles: Record<string, { title: string; subtitle: string }> = {
-    dashboard: { title: 'Studio Overview', subtitle: 'Autonomous AI Creative Collaboration' },
-    workspace: {
-      title: activeProject ? activeProject.title : 'Project Workspace',
-      subtitle: activeProject ? `${activeProject.genre} • ${activeProject.tone}` : 'Creative Suite',
-    },
-    activity: { title: 'Agent Telemetry', subtitle: 'Live Multi-Agent Event Stream' },
-    projects: { title: 'My Projects', subtitle: 'Saved Scripts & Creative Dossiers' },
-    settings: { title: 'Platform Settings', subtitle: 'Model Configuration & Storage' },
-  };
+}
 
-  const meta = titles[currentTab] || { title: 'SwarmStudio', subtitle: 'Creative Suite' };
-
+export const Topbar: React.FC<TopbarProps> = ({
+  currentTab,
+  activeProject,
+  projects,
+  onSelectProject,
+  settings,
+  onOpenCreateModal,
+}) => {
   return (
-    <div className="w-full border-b border-border bg-surface/50 backdrop-blur-sm px-6 py-4 flex items-center justify-between">
-      <div>
-        <h1 className="text-xl md:text-2xl font-bold tracking-tight text-text1">{meta.title}</h1>
-        <p className="text-xs text-text3 mt-0.5">{meta.subtitle}</p>
+    <header className="h-14 min-h-[56px] max-h-14 w-full border-b border-border bg-surface/80 backdrop-blur-md px-6 flex items-center justify-between sticky top-0 z-20">
+      {/* Left side: Single title or breadcrumb */}
+      <div className="flex items-center min-w-0 pr-4">
+        {currentTab === 'dashboard' && (
+          <h1 className="text-base font-semibold text-text1">Dashboard</h1>
+        )}
+
+        {currentTab === 'workspace' && (
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-text3 font-medium">Workspace</span>
+            {activeProject && (
+              <>
+                <span className="text-text3">/</span>
+                <span className="font-semibold text-text1 truncate max-w-[200px] sm:max-w-xs md:max-w-md">
+                  {activeProject.title}
+                </span>
+              </>
+            )}
+          </div>
+        )}
+
+        {currentTab === 'activity' && (
+          <h1 className="text-base font-semibold text-text1">Agent Activity</h1>
+        )}
+
+        {currentTab === 'projects' && (
+          <h1 className="text-base font-semibold text-text1">My Projects</h1>
+        )}
+
+        {currentTab === 'settings' && (
+          <h1 className="text-base font-semibold text-text1">Settings</h1>
+        )}
       </div>
 
-      <div className="flex items-center gap-2.5">
-        {activeProject && currentTab === 'workspace' && (
+      {/* Right side: Page-level actions */}
+      <div className="flex items-center gap-3 shrink-0">
+        {(currentTab === 'dashboard' || currentTab === 'projects') && onOpenCreateModal && (
+          <button
+            onClick={onOpenCreateModal}
+            className="btn-primary text-xs py-1.5 px-3 shadow-sm flex items-center gap-1.5"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>New Project</span>
+          </button>
+        )}
+
+        {currentTab === 'activity' && projects && projects.length > 0 && onSelectProject && (
+          <div className="flex items-center gap-2 text-xs">
+            <label className="text-text3 hidden sm:inline whitespace-nowrap">Active Project:</label>
+            <select
+              value={activeProject?.id || ''}
+              onChange={(e) => {
+                const found = projects.find((p) => p.id === e.target.value);
+                if (found) onSelectProject(found);
+              }}
+              className="input text-xs py-1 px-2.5 font-medium max-w-[220px]"
+            >
+              {projects.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.title} ({p.status})
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {currentTab === 'workspace' && activeProject && (
           <span
             className={`pill text-xs ${
               activeProject.status === 'completed'
@@ -430,17 +527,7 @@ export const Topbar: React.FC<{
               : activeProject.status}
           </span>
         )}
-
-        <span className="pill text-xs">
-          <Cpu className="w-3 h-3 text-text3" />
-          <span>{settings?.ollama_model || 'llama3.2'}</span>
-          <span
-            className={`w-1.5 h-1.5 rounded-full ${
-              settings?.ollama_status?.online ? 'bg-emerald-500' : 'bg-amber-500'
-            }`}
-          />
-        </span>
       </div>
-    </div>
+    </header>
   );
 };

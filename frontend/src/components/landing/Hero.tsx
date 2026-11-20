@@ -149,7 +149,7 @@ export const Hero: React.FC<HeroProps> = ({ onEnterStudio, onExploreClick }) => 
                     variants={wordVariants}
                     className={`inline-block ${
                       word.isAccent
-                        ? 'font-landing-serif italic text-accent font-normal text-[1.14em] tracking-tight'
+                        ? 'font-landing-serif italic text-[#CFC6FF] font-normal text-[1.14em] tracking-tight'
                         : ''
                     }`}
                   >
@@ -194,21 +194,13 @@ export const Hero: React.FC<HeroProps> = ({ onEnterStudio, onExploreClick }) => 
             </motion.div>
           </div>
 
-          {/* Bottom Scroll Indicator */}
-          <div className="relative z-10 flex items-center justify-between pt-4">
-            <div className="flex items-center gap-2 text-white/40">
-              <span className="font-landing-mono text-[11px] tracking-wider uppercase">Scroll to explore</span>
-            </div>
-
-            <motion.button
-              onClick={onExploreClick}
-              aria-label="Scroll down"
-              animate={shouldReduceMotion ? {} : { y: [0, 6, 0] }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-              className="w-7 h-10 rounded-full border border-white/20 flex items-start justify-center p-1.5 opacity-60 hover:opacity-100 transition-opacity"
-            >
-              <div className="w-1 h-2 rounded-full bg-white/70" />
-            </motion.button>
+          {/* Bottom Scroll Indicator — Subtle animated line */}
+          <div className="relative z-10 flex items-center justify-center pt-2">
+            <motion.div
+              animate={shouldReduceMotion ? {} : { y: [0, 8, 0], opacity: [0.35, 0.85, 0.35] }}
+              transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+              className="w-0.5 h-7 rounded-full bg-gradient-to-b from-white/70 to-transparent"
+            />
           </div>
         </div>
       </motion.div>

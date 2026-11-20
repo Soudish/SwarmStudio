@@ -117,8 +117,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
             <FileDown className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-lg font-bold tracking-tight text-text1">Export Creative Dossier</h2>
-            <p className="text-xs text-text3">Select a production format to export or distribute.</p>
+            <h2 className="text-lg font-bold tracking-tight text-text1">Export Project</h2>
           </div>
         </div>
 
@@ -156,11 +155,10 @@ export const ExportModal: React.FC<ExportModalProps> = ({
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-text1">Production PDF Package</span>
-                  <span className="pill text-[10px] pill-accent">Recommended</span>
+                  <span className="text-xs font-bold text-text1">PDF Document</span>
                 </div>
                 <p className="text-[11px] text-text3 mt-0.5">
-                  Formatted executive dossier with cover page, lore, characters, and screenplay.
+                  Executive dossier with cover, lore, and screenplay.
                 </p>
               </div>
 
@@ -175,7 +173,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                   ) : (
                     <FileDown className="w-3.5 h-3.5" />
                   )}
-                  <span>Download .PDF</span>
+                  <span>Download PDF</span>
                 </button>
 
                 <button
@@ -196,11 +194,10 @@ export const ExportModal: React.FC<ExportModalProps> = ({
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-text1">Markdown Package (.md)</span>
-                  <span className="pill text-[10px]">Script Editors</span>
+                  <span className="text-xs font-bold text-text1">Markdown (.md)</span>
                 </div>
                 <p className="text-[11px] text-text3 mt-0.5">
-                  Raw script treatment compatible with Final Draft, Obsidian, and Notion.
+                  Treatment compatible with Final Draft and Markdown apps.
                 </p>
               </div>
 
@@ -214,7 +211,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                 ) : (
                   <FileText className="w-3.5 h-3.5 text-text3" />
                 )}
-                <span>Download .MD</span>
+                <span>Download MD</span>
               </button>
             </div>
           </div>
@@ -223,9 +220,9 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           <div className="card-muted p-4 transition-all">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <span className="text-xs font-bold text-text1">Direct Clipboard Copy</span>
+                <span className="text-xs font-bold text-text1">Copy to Clipboard</span>
                 <p className="text-[11px] text-text3 mt-0.5">
-                  Copy the full treatment and scene breakdown to paste anywhere.
+                  Copy full treatment and scene breakdown.
                 </p>
               </div>
 
@@ -235,7 +232,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                 className="btn-ghost text-xs py-1.5 px-3 shrink-0 disabled:opacity-50"
               >
                 {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5 text-text3" />}
-                <span>{copied ? 'Copied!' : 'Copy Script'}</span>
+                <span>{copied ? 'Copied!' : 'Copy'}</span>
               </button>
             </div>
           </div>

@@ -125,13 +125,10 @@ export const ConceptArtGallery: React.FC<ConceptArtGalleryProps> = ({
         <div>
           <div className="flex items-center gap-2">
             <ImageIcon className="w-4 h-4 text-accent" />
-            <h3 className="text-base font-bold text-text1">AI Concept Art & Visual Renders</h3>
+            <h3 className="text-base font-bold text-text1">Concept Art</h3>
           </div>
-          <p className="text-xs text-text3 mt-0.5">
-            Neural concept art generated via FLUX.1. Click any card to inspect in high definition.
-          </p>
         </div>
-        <span className="pill text-xs self-start sm:self-auto">{prompts.length} Visual Prompts</span>
+        <span className="pill text-xs self-start sm:self-auto">{prompts.length} Prompts</span>
       </div>
 
       {/* Grid of Concept Art Cards */}

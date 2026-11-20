@@ -82,11 +82,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <h2 className="text-lg font-bold tracking-tight text-text1">
               {mode === 'login' ? 'Welcome Back' : 'Create Account'}
             </h2>
-            <p className="text-xs text-text3">
-              {mode === 'login'
-                ? 'Sign in to access your saved studio projects'
-                : 'Join SwarmStudio to save and export your creative dossiers'}
-            </p>
           </div>
         </div>
 
@@ -99,14 +94,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             className="w-full btn-ghost py-2.5 px-3 text-xs justify-center gap-2 border-border hover:border-border-hover"
           >
             <Zap className="w-4 h-4 text-accent fill-accent" />
-            <span>One-Click Demo Sign In (Alex Vance)</span>
+            <span>Demo Sign In (Alex Vance)</span>
           </button>
         </div>
 
         <div className="relative flex items-center justify-center my-4">
           <div className="border-t border-border w-full" />
           <span className="bg-surface px-2.5 text-[10px] font-semibold uppercase tracking-wider text-text3">
-            or continue with email
+            or with email
           </span>
           <div className="border-t border-border w-full" />
         </div>
@@ -210,7 +205,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
               <>
-                <span>{mode === 'login' ? 'Sign In to Workspace' : 'Create Free Account'}</span>
+                <span>{mode === 'login' ? 'Sign In' : 'Create Account'}</span>
                 <ArrowRight className="w-4 h-4" />
               </>
             )}

@@ -96,27 +96,15 @@ CREATE POLICY "Allow public read/write" ON projects FOR ALL USING (true) WITH CH
 
   return (
     <div className="max-w-3xl mx-auto space-y-6 pb-20">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-text1">System Settings</h1>
-        <p className="text-xs text-text3 mt-0.5">
-          Configure local Ollama inference, model endpoints, and database synchronization.
-        </p>
-      </div>
-
       <form onSubmit={handleSave} className="space-y-6">
-        {/* Section 1: Ollama Local LLM Configuration */}
-        <div className="card p-6 md:p-8 space-y-5">
-          <div className="flex items-center justify-between pb-3 border-b border-border">
+        {/* Card 1: Ollama Local LLM Configuration */}
+        <div className="card p-6 md:p-8 space-y-6">
+          <div className="flex items-center justify-between pb-4 border-b border-border">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-accent-tint text-accent-text flex items-center justify-center shrink-0">
                 <Cpu className="w-5 h-5" />
               </div>
-              <div>
-                <h2 className="text-base font-bold text-text1">Local AI Inference (Ollama)</h2>
-                <p className="text-xs text-text3">
-                  Direct privacy-first open-weight model execution.
-                </p>
-              </div>
+              <h2 className="text-base font-bold text-text1">Ollama Inference</h2>
             </div>
 
             <span
@@ -131,159 +119,180 @@ CREATE POLICY "Allow public read/write" ON projects FOR ALL USING (true) WITH CH
                   settings?.ollama_status?.online ? 'bg-emerald-500' : 'bg-amber-500'
                 }`}
               />
-              <span>{settings?.ollama_status?.online ? 'Ollama Online' : 'Ollama Offline'}</span>
+              <span>{settings?.ollama_status?.online ? 'Online' : 'Offline'}</span>
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="label block mb-1.5">Ollama Server Base URL</label>
-              <input
-                type="text"
-                value={ollamaUrl}
-                onChange={(e) => setOllamaUrl(e.target.value)}
-                placeholder="http://localhost:11434"
-                className="input text-xs"
-              />
-            </div>
-
-            <div>
-              <label className="label block mb-1.5">Default Model Name</label>
-              <input
-                type="text"
-                value={ollamaModel}
-                onChange={(e) => setOllamaModel(e.target.value)}
-                placeholder="llama3.2, mistral, gemma2, etc."
-                className="input text-xs"
-              />
-            </div>
-          </div>
-
-          {/* Test Connection Button & Inline Result */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-border">
-            <button
-              type="button"
-              onClick={handleTestOllama}
-              disabled={testingOllama}
-              className="btn-ghost text-xs self-start"
-            >
-              {testingOllama ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <RefreshCw className="w-3.5 h-3.5" />
-              )}
-              <span>{testingOllama ? 'Probing Connection...' : 'Test Ollama Connection'}</span>
-            </button>
-
-            {testResult && (
-              <div className="text-xs">
-                {testResult.status.online ? (
-                  <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4" />
-                    Ollama v{testResult.status.version} connected ({testResult.models?.length || 0} models available)
-                  </span>
-                ) : (
-                  <span className="text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1.5">
-                    <AlertCircle className="w-4 h-4" />
-                    {testResult.status.error || 'Connection failed'} (Using fallback)
-                  </span>
-                )}
+          <div className="space-y-5">
+            {/* Row 1: Ollama URL */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-4 border-b border-border/50">
+              <div className="md:w-1/3">
+                <label className="label block">Server Base URL</label>
+                <p className="text-[11px] text-text3 mt-0.5">Local Ollama HTTP endpoint</p>
               </div>
-            )}
-          </div>
-
-          {/* Quick Setup Command */}
-          <div className="card-muted p-3.5 space-y-1.5 text-xs">
-            <div className="flex items-center gap-1.5 text-text3 font-semibold text-[11px] uppercase tracking-wider">
-              <Terminal className="w-3.5 h-3.5 text-accent" />
-              <span>Quick Terminal Command</span>
+              <div className="md:w-2/3">
+                <input
+                  type="text"
+                  value={ollamaUrl}
+                  onChange={(e) => setOllamaUrl(e.target.value)}
+                  placeholder="http://localhost:11434"
+                  className="input text-xs"
+                />
+              </div>
             </div>
-            <p className="text-text3 text-xs">
-              To pull and serve the recommended local model on your machine:
-            </p>
-            <div className="p-2 rounded-lg bg-surface border border-border font-mono text-xs text-text1">
-              ollama run llama3.2
+
+            {/* Row 2: Model Name */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-4 border-b border-border/50">
+              <div className="md:w-1/3">
+                <label className="label block">Default Model</label>
+                <p className="text-[11px] text-text3 mt-0.5">e.g. llama3.2, mistral, gemma2</p>
+              </div>
+              <div className="md:w-2/3">
+                <input
+                  type="text"
+                  value={ollamaModel}
+                  onChange={(e) => setOllamaModel(e.target.value)}
+                  placeholder="llama3.2"
+                  className="input text-xs"
+                />
+              </div>
+            </div>
+
+            {/* Row 3: Offline Fallback */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-4 border-b border-border/50">
+              <div className="md:w-1/3">
+                <label className="label block">Offline Fallback</label>
+                <p className="text-[11px] text-text3 mt-0.5">Structured fallback if offline</p>
+              </div>
+              <div className="md:w-2/3 flex items-center justify-between">
+                <span className="text-xs text-text2">
+                  {demoFallback ? 'Enabled (resilient generation)' : 'Disabled (strict local only)'}
+                </span>
+                <input
+                  type="checkbox"
+                  checked={demoFallback}
+                  onChange={(e) => setDemoFallback(e.target.checked)}
+                  className="w-4 h-4 rounded accent-accent cursor-pointer"
+                />
+              </div>
+            </div>
+
+            {/* Row 4: Test Connection & Quick Setup */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+              <button
+                type="button"
+                onClick={handleTestOllama}
+                disabled={testingOllama}
+                className="btn-ghost text-xs self-start border border-border hover:border-border-hover"
+              >
+                {testingOllama ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <RefreshCw className="w-3.5 h-3.5" />
+                )}
+                <span>{testingOllama ? 'Testing...' : 'Test Connection'}</span>
+              </button>
+
+              {testResult && (
+                <div className="text-xs">
+                  {testResult.status.online ? (
+                    <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1.5">
+                      <CheckCircle2 className="w-4 h-4" />
+                      Connected (v{testResult.status.version}, {testResult.models?.length || 0} models)
+                    </span>
+                  ) : (
+                    <span className="text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1.5">
+                      <AlertCircle className="w-4 h-4" />
+                      {testResult.status.error || 'Connection failed'} (Offline mode active)
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="card-muted p-3 space-y-1 text-xs">
+              <div className="flex items-center gap-1.5 text-text3 font-semibold text-[10px] uppercase tracking-wider">
+                <Terminal className="w-3 h-3 text-accent" />
+                <span>Quick Pull</span>
+              </div>
+              <div className="p-1.5 rounded bg-surface border border-border font-mono text-[11px] text-text1">
+                ollama run {ollamaModel || 'llama3.2'}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Section 2: Supabase Cloud Database */}
-        <div className="card p-6 md:p-8 space-y-5">
-          <div className="flex items-center justify-between pb-3 border-b border-border">
+        {/* Card 2: Supabase Cloud Database */}
+        <div className="card p-6 md:p-8 space-y-6">
+          <div className="flex items-center justify-between pb-4 border-b border-border">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-surface-muted text-text1 flex items-center justify-center shrink-0 border border-border">
                 <Database className="w-5 h-5" />
               </div>
-              <div>
-                <h2 className="text-base font-bold text-text1">Database & Supabase Sync</h2>
-                <p className="text-xs text-text3">
-                  Dual-tier storage: Local SQLite database + optional Supabase cloud replication.
-                </p>
-              </div>
+              <h2 className="text-base font-bold text-text1">Supabase Sync</h2>
             </div>
 
             <span className="pill text-xs">
-              {settings?.supabase_configured ? 'Supabase Synced' : 'Local SQLite Active'}
+              {settings?.supabase_configured ? 'Synced' : 'Local SQLite'}
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="label block mb-1.5">Supabase Project URL</label>
-              <input
-                type="text"
-                value={supabaseUrl}
-                onChange={(e) => setSupabaseUrl(e.target.value)}
-                placeholder="https://xyzcompany.supabase.co"
-                className="input text-xs"
-              />
+          <div className="space-y-5">
+            {/* Row 1: Supabase URL */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-4 border-b border-border/50">
+              <div className="md:w-1/3">
+                <label className="label block">Project URL</label>
+                <p className="text-[11px] text-text3 mt-0.5">Supabase project endpoint</p>
+              </div>
+              <div className="md:w-2/3">
+                <input
+                  type="text"
+                  value={supabaseUrl}
+                  onChange={(e) => setSupabaseUrl(e.target.value)}
+                  placeholder="https://xyzcompany.supabase.co"
+                  className="input text-xs"
+                />
+              </div>
             </div>
 
-            <div>
-              <label className="label block mb-1.5">Supabase Anon Key</label>
-              <input
-                type="password"
-                value={supabaseKey}
-                onChange={(e) => setSupabaseKey(e.target.value)}
-                placeholder="eyJhbGciOi..."
-                className="input text-xs"
-              />
+            {/* Row 2: Supabase Anon Key */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-4 border-b border-border/50">
+              <div className="md:w-1/3">
+                <label className="label block">Anon Key</label>
+                <p className="text-[11px] text-text3 mt-0.5">Public client authentication key</p>
+              </div>
+              <div className="md:w-2/3">
+                <input
+                  type="password"
+                  value={supabaseKey}
+                  onChange={(e) => setSupabaseKey(e.target.value)}
+                  placeholder="eyJhbGciOi..."
+                  className="input text-xs"
+                />
+              </div>
+            </div>
+
+            {/* Row 3: Schema (SQL) */}
+            <div className="space-y-2 pt-1">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="label block">Database Schema</span>
+                  <p className="text-[11px] text-text3">Paste in Supabase SQL editor</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleCopySql}
+                  className="flex items-center gap-1 text-xs text-accent hover:underline font-medium"
+                >
+                  {copiedSql ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{copiedSql ? 'Copied' : 'Copy SQL'}</span>
+                </button>
+              </div>
+              <pre className="card-muted p-3 font-mono text-[11px] text-text2 overflow-x-auto max-h-40">
+                {sqlSchema}
+              </pre>
             </div>
           </div>
-
-          {/* Copyable SQL Schema */}
-          <div className="space-y-2 pt-2 border-t border-border">
-            <div className="flex items-center justify-between">
-              <span className="label">Supabase Table Schema (SQL)</span>
-              <button
-                type="button"
-                onClick={handleCopySql}
-                className="flex items-center gap-1 text-xs text-accent hover:underline font-medium"
-              >
-                {copiedSql ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>{copiedSql ? 'Copied SQL' : 'Copy Schema'}</span>
-              </button>
-            </div>
-            <pre className="card-muted p-3.5 font-mono text-[11px] text-text2 overflow-x-auto">
-              {sqlSchema}
-            </pre>
-          </div>
-        </div>
-
-        {/* Section 3: Resilient Creative Fallback */}
-        <div className="card p-5 flex items-center justify-between gap-4">
-          <div>
-            <h3 className="font-semibold text-sm text-text1">Resilient Creative Fallback Engine</h3>
-            <p className="text-xs text-text3 mt-0.5">
-              Generates rich, structured narrative treatments if local Ollama inference is offline.
-            </p>
-          </div>
-          <input
-            type="checkbox"
-            checked={demoFallback}
-            onChange={(e) => setDemoFallback(e.target.checked)}
-            className="w-4 h-4 rounded accent-accent cursor-pointer"
-          />
         </div>
 
         {/* Save Bar */}
@@ -291,21 +300,21 @@ CREATE POLICY "Allow public read/write" ON projects FOR ALL USING (true) WITH CH
           {savedSuccess && (
             <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 animate-fadeIn">
               <CheckCircle2 className="w-4 h-4" />
-              Settings updated successfully!
+              Settings saved!
             </span>
           )}
           <div className="ml-auto">
             <button
               type="submit"
               disabled={saving}
-              className="btn-primary text-xs"
+              className="btn-primary text-xs shadow-sm"
             >
               {saving ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
               ) : (
                 <Save className="w-3.5 h-3.5" />
               )}
-              <span>{saving ? 'Saving...' : 'Save Configuration'}</span>
+              <span>{saving ? 'Saving...' : 'Save Settings'}</span>
             </button>
           </div>
         </div>

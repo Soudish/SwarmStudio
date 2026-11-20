@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Film,
   Gamepad2,
@@ -8,8 +9,7 @@ import {
   Trash2,
   Download,
   Calendar,
-  Loader2,
-  ArrowRight
+  Loader2
 } from 'lucide-react';
 import { ProjectData, ProjectType } from '../../types';
 import { api } from '../../services/api';
@@ -72,50 +72,32 @@ export const MyProjects: React.FC<MyProjectsProps> = ({
 
   return (
     <div className="space-y-6 pb-20">
-      {/* Header & Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-text1">My Projects</h1>
-          <p className="text-xs text-text3 mt-0.5">
-            Manage, review, edit, and export your multi-agent studio productions.
-          </p>
-        </div>
-
-        <button
-          onClick={onOpenCreateModal}
-          className="btn-primary text-xs self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4" />
-          <span>New Project</span>
-        </button>
-      </div>
-
-      {/* Search & Filter Bar */}
-      <div className="card p-3.5 flex flex-col sm:flex-row items-center justify-between gap-3">
+      {/* Slim Toolbar Row (No big card container) */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="relative w-full sm:w-80">
-          <Search className="w-4 h-4 text-text3 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-text3 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
-            placeholder="Search by title, genre, premise..."
+            placeholder="Search projects by title or premise..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="input text-xs pl-9 py-2"
+            className="input text-xs pl-10 pr-3 py-2 w-full"
           />
         </div>
 
-        <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto text-xs scrollbar-none">
+        <div className="flex items-center gap-1.5 overflow-x-auto text-xs scrollbar-none">
           {[
-            { id: 'all', label: 'All Formats' },
-            { id: 'film', label: 'Films' },
-            { id: 'game', label: 'Games' },
-            { id: 'podcast', label: 'Podcasts' },
+            { id: 'all', label: 'All' },
+            { id: 'film', label: 'Film' },
+            { id: 'game', label: 'Game' },
+            { id: 'podcast', label: 'Podcast' },
           ].map(({ id, label }) => (
             <button
               key={id}
               onClick={() => setTypeFilter(id as any)}
               className={`px-3 py-1.5 rounded-xl font-medium transition-all ${
                 typeFilter === id
-                  ? 'bg-text1 text-surface font-semibold'
+                  ? 'bg-text1 text-surface font-semibold shadow-sm'
                   : 'text-text3 hover:text-text1 hover:bg-surface-muted'
               }`}
             >
@@ -125,93 +107,108 @@ export const MyProjects: React.FC<MyProjectsProps> = ({
         </div>
       </div>
 
-      {/* Projects Grid */}
+      {/* Projects Grid with Stagger & Layout Transitions */}
       {filtered.length === 0 ? (
         <div className="card card-muted p-12 text-center border-dashed">
-          <h3 className="text-sm font-semibold text-text1">No Matching Projects</h3>
+          <h3 className="text-sm font-semibold text-text1">No projects found</h3>
           <p className="text-xs text-text3 mt-1 mb-4">
-            Try a different search query or launch a new creative project.
+            Try a different search or create a new project.
           </p>
           <button onClick={onOpenCreateModal} className="btn-primary text-xs">
             <Plus className="w-4 h-4" />
-            <span>Create New Project</span>
+            <span>New Project</span>
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map((proj) => {
-            const TypeIcon =
-              proj.project_type === 'film' ? Film : proj.project_type === 'game' ? Gamepad2 : Mic;
+        <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <AnimatePresence>
+            {filtered.map((proj) => {
+              const TypeIcon =
+                proj.project_type === 'film' ? Film : proj.project_type === 'game' ? Gamepad2 : Mic;
+              const isGen = proj.status === 'generating';
 
-            return (
-              <div
-                key={proj.id}
-                onClick={() => onSelectProject(proj)}
-                className="card-interactive p-5 flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="pill text-[11px]">
-                      <TypeIcon className="w-3 h-3 text-text3" />
-                      <span className="capitalize">{proj.project_type}</span>
-                    </span>
-                    <span
-                      className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${
-                        proj.status === 'completed'
-                          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                          : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                      }`}
+              return (
+                <motion.div
+                  layout
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                  key={proj.id}
+                  onClick={() => onSelectProject(proj)}
+                  className="group card-interactive p-5 flex flex-col justify-between"
+                >
+                  <div>
+                    {/* Header: Format Icon + Label, Status Dot */}
+                    <div className="flex items-center justify-between mb-2.5">
+                      <div className="flex items-center gap-1.5 text-xs text-text3 font-medium">
+                        <TypeIcon className="w-3.5 h-3.5" />
+                        <span className="capitalize">{proj.project_type}</span>
+                        <span>·</span>
+                        <span className="truncate max-w-[120px]">{proj.genre}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs">
+                        <span
+                          className={`w-2 h-2 rounded-full ${
+                            proj.status === 'completed'
+                              ? 'bg-emerald-500'
+                              : isGen
+                              ? 'bg-amber-500 animate-pulse'
+                              : 'bg-text3'
+                          }`}
+                        />
+                        <span className="text-[11px] text-text3 font-medium">
+                          {proj.status === 'completed' ? 'Ready' : isGen ? `${proj.progress}%` : proj.status}
+                        </span>
+                      </div>
+                    </div>
+
+                    <h3 className="font-semibold text-base text-text1 line-clamp-1 group-hover:text-accent transition-colors">
+                      {proj.title}
+                    </h3>
+                    <p className="text-xs text-text2 mt-1.5 line-clamp-1 leading-relaxed">
+                      {proj.idea}
+                    </p>
+                  </div>
+
+                  {/* Footer: Date & Actions on hover/focus */}
+                  <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-xs text-text3">
+                    <div className="flex items-center gap-1.5 text-[11px]">
+                      <Calendar className="w-3 h-3 text-text3" />
+                      <span>{new Date(proj.created_at).toLocaleDateString()}</span>
+                    </div>
+
+                    <div
+                      className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity"
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      {proj.status === 'completed' ? 'Ready' : `Generating (${proj.progress}%)`}
-                    </span>
+                      <button
+                        onClick={(e) => handleExportPdf(e, proj)}
+                        disabled={exportingId === proj.id}
+                        title="Download PDF Dossier"
+                        className="p-1.5 rounded-lg text-text3 hover:text-text1 hover:bg-surface-muted transition-colors disabled:opacity-50"
+                      >
+                        {exportingId === proj.id ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Download className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+                      <button
+                        onClick={(e) => handleDelete(e, proj.id)}
+                        disabled={deletingId === proj.id}
+                        title="Delete Project"
+                        className="p-1.5 rounded-lg text-text3 hover:text-rose-500 hover:bg-rose-500/10 transition-colors disabled:opacity-50"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
-
-                  <h3 className="font-semibold text-base text-text1 line-clamp-1 group-hover:text-accent transition-colors">
-                    {proj.title}
-                  </h3>
-                  <p className="text-xs text-text2 mt-1 line-clamp-2 leading-relaxed">
-                    {proj.idea}
-                  </p>
-
-                  <div className="mt-3 flex flex-wrap gap-1.5 text-[11px]">
-                    <span className="pill text-[10px]">{proj.genre}</span>
-                    <span className="pill text-[10px]">{proj.tone}</span>
-                  </div>
-                </div>
-
-                <div className="mt-5 pt-3 border-t border-border flex items-center justify-between text-xs text-text3">
-                  <div className="flex items-center gap-1.5 text-[11px]">
-                    <Calendar className="w-3 h-3 text-text3" />
-                    <span>{new Date(proj.created_at).toLocaleDateString()}</span>
-                  </div>
-
-                  <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                    <button
-                      onClick={(e) => handleExportPdf(e, proj)}
-                      disabled={exportingId === proj.id}
-                      title="Download PDF Dossier"
-                      className="p-1.5 rounded-lg text-text3 hover:text-text1 hover:bg-surface-muted transition-colors disabled:opacity-50"
-                    >
-                      {exportingId === proj.id ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      ) : (
-                        <Download className="w-3.5 h-3.5" />
-                      )}
-                    </button>
-                    <button
-                      onClick={(e) => handleDelete(e, proj.id)}
-                      disabled={deletingId === proj.id}
-                      title="Delete Project"
-                      className="p-1.5 rounded-lg text-text3 hover:text-rose-500 hover:bg-rose-500/10 transition-colors disabled:opacity-50"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+        </motion.div>
       )}
     </div>
   );

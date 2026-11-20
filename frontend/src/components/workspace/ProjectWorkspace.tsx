@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Film,
   Gamepad2,
@@ -38,6 +39,32 @@ interface ProjectWorkspaceProps {
   onSelectTab: (tab: string) => void;
   onRefreshProject: () => void;
 }
+
+// Reusable count-up for critic quality score
+const CountUpScore: React.FC<{ value: number }> = ({ value }) => {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    let startTime: number | null = null;
+    const duration = 850;
+
+    const animate = (time: number) => {
+      if (startTime === null) startTime = time;
+      const elapsed = time - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      setCount(Math.round(ease * value));
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }, [value]);
+
+  return <span>{count}</span>;
+};
 
 export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
   project,
@@ -143,25 +170,48 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
   const TypeIcon = project.project_type === 'film' ? Film : project.project_type === 'game' ? Gamepad2 : Mic;
   const isGenerating = project.status === 'generating';
 
-  // Tasteful skeleton shimmer placeholder
-  const renderGeneratingSkeleton = (sectionName: string) => (
-    <div className="card p-8 text-center space-y-4">
-      <div className="flex items-center justify-center gap-2">
-        <span className="w-2.5 h-2.5 rounded-full bg-accent animate-ping" />
-        <span className="text-xs font-semibold text-text1">
-          {project.current_agent || 'Creative Agent'} is developing {sectionName}...
-        </span>
+  // Section placeholder: shimmer skeleton while generating, clean empty state when finished
+  const renderSectionPlaceholder = (
+    sectionName: string,
+    deptKey: 'overview' | 'research' | 'story' | 'visuals' | 'audio' | 'critic'
+  ) => {
+    if (isGenerating) {
+      return (
+        <div className="card p-8 text-center space-y-4">
+          <div className="flex items-center justify-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-accent animate-ping" />
+            <span className="text-xs font-semibold text-text1">
+              Generating {sectionName}...
+            </span>
+          </div>
+          <div className="max-w-md mx-auto space-y-2.5 pt-2">
+            <div className="h-4 bg-surface-muted rounded-full w-full animate-pulse" />
+            <div className="h-4 bg-surface-muted rounded-full w-4/5 mx-auto animate-pulse" />
+            <div className="h-4 bg-surface-muted rounded-full w-3/5 mx-auto animate-pulse" />
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="card p-12 text-center border-dashed space-y-3">
+        <h3 className="text-sm font-semibold text-text1">Nothing here yet</h3>
+        <p className="text-xs text-text3 max-w-sm mx-auto">
+          This section has not been generated for this project.
+        </p>
+        <button
+          onClick={() => {
+            if (deptKey !== 'overview') setRegenSection(deptKey);
+            setIsRegeneratingModalOpen(true);
+          }}
+          className="btn-primary text-xs"
+        >
+          <RefreshCw className="w-3.5 h-3.5" />
+          <span>Regenerate Section</span>
+        </button>
       </div>
-      <p className="text-xs text-text3 max-w-md mx-auto">
-        Passing context from previous agents to synthesize coherent production deliverables.
-      </p>
-      <div className="max-w-md mx-auto space-y-2.5 pt-2">
-        <div className="h-4 bg-surface-muted rounded-full w-full animate-pulse" />
-        <div className="h-4 bg-surface-muted rounded-full w-4/5 mx-auto animate-pulse" />
-        <div className="h-4 bg-surface-muted rounded-full w-3/5 mx-auto animate-pulse" />
-      </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="space-y-6 pb-20 max-w-[1100px] mx-auto">
@@ -169,25 +219,28 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
       <div className="card p-6 md:p-8 space-y-5">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-3">
-            {/* Metadata Pills */}
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="pill text-xs">
+            {/* Metadata Chips: FORMAT · GENRE only (tone in muted text), status as dot + label */}
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="pill text-xs font-semibold uppercase tracking-wider">
                 <TypeIcon className="w-3.5 h-3.5 text-text3" />
-                <span className="font-semibold uppercase tracking-wider">{project.project_type}</span>
+                <span>{project.project_type} · {project.genre}</span>
               </span>
-              <span className="pill text-xs">{project.genre}</span>
-              <span className="pill text-xs">Tone: {project.tone}</span>
-              <span
-                className={`pill text-xs font-medium ${
-                  project.status === 'completed'
-                    ? 'pill-accent'
-                    : isGenerating
-                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
-                    : ''
-                }`}
-              >
-                {project.status === 'completed' ? '✓ Ready' : `Swarm Active (${project.progress}%)`}
-              </span>
+              <span className="text-xs text-text3">{project.tone}</span>
+              <span className="text-text3 text-xs">•</span>
+              <div className="flex items-center gap-1.5 text-xs font-medium">
+                <span
+                  className={`w-2 h-2 rounded-full ${
+                    project.status === 'completed'
+                      ? 'bg-emerald-500'
+                      : isGenerating
+                      ? 'bg-amber-500 animate-pulse'
+                      : 'bg-text3'
+                  }`}
+                />
+                <span className="text-text2">
+                  {project.status === 'completed' ? 'Ready' : `Generating (${project.progress}%)`}
+                </span>
+              </div>
             </div>
 
             {/* Editable Title */}
@@ -240,47 +293,47 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
             </p>
           </div>
 
-          {/* Action Toolbar */}
+          {/* Action Toolbar: Export (primary), Regenerate (outline), icon-only Activity and PDF */}
           <div className="flex flex-wrap items-center gap-2">
             <button
-              onClick={() => onSelectTab('activity')}
-              className="btn-ghost text-xs"
-              title="Inspect agent telemetry"
+              onClick={() => setIsExportModalOpen(true)}
+              className="btn-primary text-xs py-1.5 px-3.5 shadow-sm"
+              title="Export Project"
             >
-              <Activity className="w-3.5 h-3.5 text-text3" />
-              <span>Live Activity</span>
+              <Download className="w-3.5 h-3.5" />
+              <span>Export</span>
             </button>
 
             <button
               onClick={() => setIsRegeneratingModalOpen(true)}
-              className="btn-ghost text-xs"
-              title="Targeted department revision"
+              className="btn-ghost border border-border hover:border-border-hover text-xs py-1.5 px-3"
+              title="Regenerate Section"
             >
               <RefreshCw className="w-3.5 h-3.5 text-text3" />
-              <span>Regenerate Section</span>
+              <span>Regenerate</span>
             </button>
 
             <button
-              onClick={() => setIsExportModalOpen(true)}
-              className="btn-primary text-xs"
-              title="Open Export Package Modal"
+              onClick={() => onSelectTab('activity')}
+              className="p-2 rounded-xl text-text3 hover:text-text1 hover:bg-surface-muted border border-border transition-colors"
+              title="View Agent Activity"
+              aria-label="View Agent Activity"
             >
-              <Download className="w-3.5 h-3.5" />
-              <span>Export Dossier</span>
+              <Activity className="w-4 h-4" />
             </button>
 
             <button
               onClick={handleQuickDownloadPdf}
               disabled={isQuickExportingPdf}
-              className="btn-ghost text-xs"
-              title="Instant 1-Click PDF Download"
+              className="p-2 rounded-xl text-text3 hover:text-text1 hover:bg-surface-muted border border-border transition-colors disabled:opacity-50"
+              title="Download PDF"
+              aria-label="Download PDF"
             >
               {isQuickExportingPdf ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                <FileDown className="w-3.5 h-3.5 text-text3" />
+                <FileDown className="w-4 h-4" />
               )}
-              <span className="hidden sm:inline">Quick PDF</span>
             </button>
           </div>
         </div>
@@ -308,101 +361,110 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
         )}
       </div>
 
-      {/* Underlined Segmented Department Tabs */}
-      <div className="flex items-center gap-1 overflow-x-auto pb-1 border-b border-border scrollbar-none">
+      {/* Underline Tab Row with Sliding Active Indicator */}
+      <div className="flex items-center gap-2 overflow-x-auto border-b border-border scrollbar-none relative">
         {[
-          { id: 'overview', label: 'Concept & Overview', icon: Sparkles },
-          { id: 'research', label: 'World Lore & Characters', icon: Brain },
-          { id: 'story', label: 'Screenplay & Scenes', icon: Feather },
-          { id: 'visuals', label: 'Visual Art Direction', icon: Palette },
-          { id: 'audio', label: 'Audio & Sound Atmosphere', icon: Headphones },
-          { id: 'critic', label: 'Critic Audit & Review', icon: CheckCircle2 },
+          { id: 'overview', label: 'Overview', icon: Sparkles },
+          { id: 'research', label: 'World & Lore', icon: Brain },
+          { id: 'story', label: 'Screenplay', icon: Feather },
+          { id: 'visuals', label: 'Visuals', icon: Palette },
+          { id: 'audio', label: 'Audio', icon: Headphones },
+          { id: 'critic', label: 'Critic', icon: CheckCircle2 },
         ].map(({ id, label, icon: Icon }) => {
           const isActive = activeDepartment === id;
           return (
             <button
               key={id}
               onClick={() => setActiveDepartment(id as any)}
-              className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
-                isActive
-                  ? 'bg-accent-tint text-accent-text font-semibold'
-                  : 'text-text2 hover:text-text1 hover:bg-surface-muted'
+              className={`relative flex items-center gap-2 px-3.5 py-3 text-xs sm:text-sm font-medium whitespace-nowrap transition-colors ${
+                isActive ? 'text-accent font-semibold' : 'text-text3 hover:text-text1'
               }`}
             >
-              <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-accent' : 'text-text3'}`} />
+              <Icon className="w-4 h-4 shrink-0" />
               <span>{label}</span>
+              {isActive && (
+                <motion.div
+                  layoutId="activeWorkspaceTab"
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent rounded-full"
+                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                />
+              )}
             </button>
           );
         })}
       </div>
 
       {/* DEPARTMENT CONTENT PANELS */}
-
-      {/* 1. CONCEPT & OVERVIEW */}
-      {activeDepartment === 'overview' && (
-        <div className="space-y-6">
-          {project.story ? (
-            <>
-              {/* Editorial Logline Pull-Quote */}
-              <div className="card p-6 md:p-8 space-y-2">
-                <span className="label">Official Project Logline</span>
-                <blockquote className="text-xl md:text-2xl font-serif italic text-text1 leading-relaxed">
-                  "{project.story.logline}"
-                </blockquote>
-              </div>
-
-              {/* Synopsis & 3-Act Structure Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="card p-6 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Feather className="w-4 h-4 text-accent" />
-                    <h3 className="text-sm font-semibold text-text1">Dramatic Synopsis</h3>
-                  </div>
-                  <p className="text-xs sm:text-sm text-text2 leading-relaxed whitespace-pre-line">
-                    {project.story.synopsis}
-                  </p>
-                </div>
-
-                <div className="card p-6 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-accent" />
-                    <h3 className="text-sm font-semibold text-text1">Three-Act Narrative Structure</h3>
-                  </div>
-                  <div className="card-muted p-4 text-xs font-mono text-text2 leading-relaxed whitespace-pre-line">
-                    {project.story.three_act_structure}
-                  </div>
-                </div>
-              </div>
-
-              {/* Executive Critic Score Card */}
-              {project.critic && (
-                <div className="card-dark p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6">
-                  <div className="space-y-1.5 text-center sm:text-left">
-                    <span className="pill text-xs bg-white/10 text-white/90 border-transparent">
-                      Continuity Verdict
-                    </span>
-                    <h3 className="text-xl font-bold text-white">{project.critic.verdict}</h3>
-                    <p className="text-xs text-white/70">
-                      Continuity: <strong className="text-white">{project.critic.continuity_status}</strong>
-                    </p>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeDepartment}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.18 }}
+        >
+          {/* 1. CONCEPT & OVERVIEW */}
+          {activeDepartment === 'overview' && (
+            <div className="space-y-6">
+              {project.story ? (
+                <>
+                  {/* Editorial Logline Pull-Quote */}
+                  <div className="card p-6 md:p-8 space-y-2">
+                    <span className="label">Logline</span>
+                    <blockquote className="text-xl md:text-2xl font-serif italic text-text1 leading-relaxed">
+                      "{project.story.logline}"
+                    </blockquote>
                   </div>
 
-                  <div className="flex flex-col items-center justify-center p-4 rounded-2xl bg-white/10 border border-white/10 min-w-[120px] text-center">
-                    <span className="text-4xl font-extrabold text-white tracking-tight">
-                      {project.critic.score}
-                    </span>
-                    <span className="text-[10px] uppercase font-bold text-white/60 tracking-wider mt-0.5">
-                      Quality Index
-                    </span>
+                  {/* Synopsis & 3-Act Structure Grid */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="card p-6 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Feather className="w-4 h-4 text-accent" />
+                        <h3 className="text-sm font-semibold text-text1">Synopsis</h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-text2 leading-relaxed whitespace-pre-line">
+                        {project.story.synopsis}
+                      </p>
+                    </div>
+
+                    <div className="card p-6 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-accent" />
+                        <h3 className="text-sm font-semibold text-text1">Three-Act Structure</h3>
+                      </div>
+                      <div className="card-muted p-4 text-xs font-mono text-text2 leading-relaxed whitespace-pre-line">
+                        {project.story.three_act_structure}
+                      </div>
+                    </div>
                   </div>
-                </div>
+
+                  {/* Executive Critic Score Card */}
+                  {project.critic && (
+                    <div className="card-dark p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+                      <div className="space-y-1.5 text-center sm:text-left">
+                        <h3 className="text-xl font-bold text-white">{project.critic.verdict}</h3>
+                        <p className="text-xs text-white/70">
+                          Continuity: <strong className="text-white">{project.critic.continuity_status}</strong>
+                        </p>
+                      </div>
+
+                      <div className="flex flex-col items-center justify-center p-4 rounded-2xl bg-white/10 border border-white/10 min-w-[120px] text-center">
+                        <span className="text-4xl font-extrabold text-white tracking-tight">
+                          <CountUpScore value={project.critic.score} />
+                        </span>
+                        <span className="text-[10px] uppercase font-bold text-white/60 tracking-wider mt-0.5">
+                          Quality Score
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                renderSectionPlaceholder('Narrative Overview', 'overview')
               )}
-            </>
-          ) : (
-            renderGeneratingSkeleton('Narrative Overview')
+            </div>
           )}
-        </div>
-      )}
 
       {/* 2. WORLD LORE & CHARACTERS */}
       {activeDepartment === 'research' && (
@@ -414,7 +476,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
                 <div className="card p-6 space-y-2.5">
                   <div className="flex items-center gap-2">
                     <Brain className="w-4 h-4 text-accent" />
-                    <h3 className="text-sm font-semibold text-text1">World Setting & Environment</h3>
+                    <h3 className="text-sm font-semibold text-text1">Setting & Environment</h3>
                   </div>
                   <p className="text-xs sm:text-sm text-text2 leading-relaxed">
                     {project.research.world_building}
@@ -424,7 +486,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
                 <div className="card p-6 space-y-2.5">
                   <div className="flex items-center gap-2">
                     <Sliders className="w-4 h-4 text-accent" />
-                    <h3 className="text-sm font-semibold text-text1">Governing Laws & Lore</h3>
+                    <h3 className="text-sm font-semibold text-text1">Laws & Lore</h3>
                   </div>
                   <p className="text-xs sm:text-sm text-text2 leading-relaxed">
                     {project.research.lore_and_rules}
@@ -436,8 +498,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-base font-bold text-text1">Dramatis Personae & Characters</h3>
-                    <p className="text-xs text-text3">Key protagonist and secondary character profiles.</p>
+                    <h3 className="text-base font-bold text-text1">Characters</h3>
                   </div>
                   <span className="pill text-xs">{project.research.characters.length} Roles</span>
                 </div>
@@ -477,7 +538,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
               </div>
             </>
           ) : (
-            renderGeneratingSkeleton('World Lore & Characters')
+            renderSectionPlaceholder('World Lore & Characters', 'research')
           )}
         </div>
       )}
@@ -493,7 +554,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
                   <div className="flex items-center gap-2">
                     <FileText className="w-4 h-4 text-accent" />
                     <h3 className="text-sm font-semibold text-text1">
-                      Screenplay Treatment & Dialogue Excerpt
+                      Treatment & Excerpt
                     </h3>
                   </div>
                   <button
@@ -501,7 +562,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
                     className="flex items-center gap-1.5 text-xs text-accent font-medium hover:underline"
                   >
                     {copiedPromptId === 'screenplay' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                    <span>{copiedPromptId === 'screenplay' ? 'Copied' : 'Copy Treatment'}</span>
+                    <span>{copiedPromptId === 'screenplay' ? 'Copied' : 'Copy'}</span>
                   </button>
                 </div>
                 <div className="card-muted p-4 text-xs font-mono text-text2 leading-relaxed whitespace-pre-wrap max-h-64 overflow-y-auto">
@@ -514,11 +575,8 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-base font-bold text-text1">
-                      Chronological Scene Breakdown ({project.story.scenes.length} Scenes)
+                      Scene Breakdown ({project.story.scenes.length})
                     </h3>
-                    <p className="text-xs text-text3">
-                      Click the edit button on any scene to revise action or dialogue lines inline.
-                    </p>
                   </div>
                 </div>
 
@@ -623,7 +681,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
               </div>
             </>
           ) : (
-            renderGeneratingSkeleton('Screenplay & Scenes')
+            renderSectionPlaceholder('Screenplay & Scenes', 'story')
           )}
         </div>
       )}
@@ -639,7 +697,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
                   <div className="flex items-center gap-2">
                     <Palette className="w-4 h-4 text-accent" />
                     <h3 className="text-sm font-semibold text-text1">
-                      Art Direction & Visual Philosophy
+                      Art Direction
                     </h3>
                   </div>
                   <p className="text-xs sm:text-sm text-text2 leading-relaxed">
@@ -649,14 +707,17 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
 
                 {/* 5-Color Hex Production Palette */}
                 <div className="card p-6 space-y-3">
-                  <h3 className="text-sm font-semibold text-text1">Production Palette</h3>
+                  <h3 className="text-sm font-semibold text-text1">Palette</h3>
                   <div className="space-y-2">
                     {project.visuals.color_palette.map((c, i) => {
                       const hexMatch = c.match(/#[0-9a-fA-F]{6}/);
                       const hex = hexMatch ? hexMatch[0] : '#7E22CE';
                       return (
-                        <div
+                        <motion.div
                           key={i}
+                          initial={{ opacity: 0, scale: 0.95, y: 4 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          transition={{ delay: i * 0.05, duration: 0.2 }}
                           onClick={() => handleCopy(hex, hex, 'color')}
                           className="flex items-center justify-between p-2 rounded-xl border border-border bg-surface-muted hover:border-border-hover cursor-pointer transition-colors"
                         >
@@ -670,7 +731,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
                           <span className="text-[10px] text-accent font-semibold">
                             {copiedColor === hex ? 'Copied' : 'Copy'}
                           </span>
-                        </div>
+                        </motion.div>
                       );
                     })}
                   </div>
@@ -706,7 +767,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
               />
             </>
           ) : (
-            renderGeneratingSkeleton('Visual Art Direction')
+            renderSectionPlaceholder('Visual Art Direction', 'visuals')
           )}
         </div>
       )}
@@ -754,7 +815,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
               {/* Soundtrack Tracks & Voice Casting */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="card p-6 space-y-3">
-                  <h3 className="text-sm font-semibold text-text1">Thematic Production Tracks</h3>
+                  <h3 className="text-sm font-semibold text-text1">Soundtrack Tracks</h3>
                   <div className="space-y-1.5">
                     {project.audio.soundtrack_tracks.map((t, idx) => (
                       <div key={idx} className="p-2 rounded-xl bg-surface-muted text-xs text-text2">
@@ -765,7 +826,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
                 </div>
 
                 <div className="card p-6 space-y-2">
-                  <h3 className="text-sm font-semibold text-text1">Voice Casting & Delivery Direction</h3>
+                  <h3 className="text-sm font-semibold text-text1">Voice Casting</h3>
                   <p className="text-xs sm:text-sm text-text2 leading-relaxed">
                     {project.audio.voice_casting_notes}
                   </p>
@@ -776,9 +837,8 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
               <div className="space-y-4">
                 <div>
                   <h3 className="text-base font-bold text-text1">
-                    SFX & Foley Cues ({project.audio.sound_effects.length})
+                    Sound Effects ({project.audio.sound_effects.length})
                   </h3>
-                  <p className="text-xs text-text3">Scene-by-scene audio cues designed by the Audio Agent.</p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -796,7 +856,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
               </div>
             </>
           ) : (
-            renderGeneratingSkeleton('Audio & Sound Design')
+            renderSectionPlaceholder('Audio & Sound Design', 'audio')
           )}
         </div>
       )}
@@ -809,22 +869,18 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
               {/* Score & Verdict Banner */}
               <div className="card-dark p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6">
                 <div className="space-y-2 text-center md:text-left">
-                  <span className="pill text-xs bg-white/10 text-white/90 border-transparent">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                    Critic Continuity Audit
-                  </span>
                   <h3 className="text-xl md:text-2xl font-bold text-white">{project.critic.verdict}</h3>
                   <p className="text-xs text-white/70">
-                    Continuity Status: <strong className="text-white">{project.critic.continuity_status}</strong>
+                    Continuity: <strong className="text-white">{project.critic.continuity_status}</strong>
                   </p>
                 </div>
 
                 <div className="flex flex-col items-center justify-center p-5 rounded-2xl bg-white/10 border border-white/10 text-center min-w-[130px]">
                   <span className="text-4xl font-extrabold text-white tracking-tight">
-                    {project.critic.score}
+                    <CountUpScore value={project.critic.score} />
                   </span>
                   <span className="text-[10px] uppercase font-bold text-white/60 tracking-wider mt-1">
-                    Quality Index / 100
+                    Quality Score
                   </span>
                 </div>
               </div>
@@ -835,7 +891,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
                 <div className="card p-6 space-y-3">
                   <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-semibold text-sm">
                     <CheckCircle2 className="w-4 h-4" />
-                    <h4>Standout Creative Strengths</h4>
+                    <h4>Strengths</h4>
                   </div>
                   <ul className="space-y-2 text-xs sm:text-sm text-text2">
                     {project.critic.strengths.map((str, idx) => (
@@ -851,7 +907,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
                 <div className="card p-6 space-y-3">
                   <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-semibold text-sm">
                     <AlertCircle className="w-4 h-4" />
-                    <h4>Flagged Continuity Nuances</h4>
+                    <h4>Continuity Nuances</h4>
                   </div>
                   <ul className="space-y-2 text-xs sm:text-sm text-text2">
                     {project.critic.inconsistencies.map((inc, idx) => (
@@ -868,7 +924,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
               <div className="card p-6 space-y-3">
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-accent" />
-                  <h4 className="text-sm font-semibold text-text1">Actionable Editorial Revisions</h4>
+                  <h4 className="text-sm font-semibold text-text1">Editorial Revisions</h4>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   {project.critic.suggestions_for_improvement.map((sug, idx) => (
@@ -881,10 +937,12 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
               </div>
             </>
           ) : (
-            renderGeneratingSkeleton('Critic Audit & Quality Review')
+            renderSectionPlaceholder('Critic Audit & Quality Review', 'critic')
           )}
         </div>
       )}
+        </motion.div>
+      </AnimatePresence>
 
       {/* HUMAN IN THE LOOP: REGENERATE SECTION MODAL */}
       {isRegeneratingModalOpen && (
@@ -893,7 +951,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <RefreshCw className="w-4 h-4 text-accent" />
-                <h3 className="text-base font-bold text-text1">Regenerate Department Section</h3>
+                <h3 className="text-base font-bold text-text1">Regenerate Section</h3>
               </div>
               <button
                 onClick={() => setIsRegeneratingModalOpen(false)}
@@ -908,11 +966,11 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
               <label className="label block mb-2">Target Department</label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
                 {[
-                  { key: 'story', label: 'Screenplay & Scenes' },
-                  { key: 'research', label: 'World Lore & Chars' },
-                  { key: 'visuals', label: 'Visual Art Direction' },
-                  { key: 'audio', label: 'Audio & Music' },
-                  { key: 'critic', label: 'Critic Quality Audit' },
+                  { key: 'story', label: 'Screenplay' },
+                  { key: 'research', label: 'World & Lore' },
+                  { key: 'visuals', label: 'Visuals' },
+                  { key: 'audio', label: 'Audio' },
+                  { key: 'critic', label: 'Critic' },
                 ].map(({ key, label }) => {
                   const isActive = regenSection === key;
                   return (
@@ -934,7 +992,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
             </div>
 
             <div>
-              <label className="label block mb-1.5">Creative Revision Directives</label>
+              <label className="label block mb-1.5">Revision Notes</label>
               <textarea
                 rows={3}
                 placeholder="e.g. 'Make the ending more bittersweet', 'Emphasize neon noir visuals', 'Add a haunting violin motif'..."
@@ -961,11 +1019,11 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({
                 {isRegenerating ? (
                   <>
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span>Deploying Agent...</span>
+                    <span>Regenerating...</span>
                   </>
                 ) : (
                   <>
-                    <span>Submit & Regenerate</span>
+                    <span>Regenerate</span>
                     <ArrowRight className="w-3 h-3" />
                   </>
                 )}

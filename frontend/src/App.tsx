@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Navbar, Topbar } from './components/layout/Navbar';
 import { Dashboard } from './components/dashboard/Dashboard';
 import { ProjectWorkspace } from './components/workspace/ProjectWorkspace';
@@ -14,6 +15,7 @@ import { useTheme } from './contexts/ThemeContext';
 
 export const App: React.FC = () => {
   const { isDark } = useTheme();
+  const shouldReduceMotion = useReducedMotion();
 
   // View states: 'landing' or 'studio'
   const [currentView, setCurrentView] = useState<'landing' | 'studio'>('landing');
@@ -225,6 +227,8 @@ export const App: React.FC = () => {
         <Topbar
           currentTab={currentTab}
           activeProject={activeProject}
+          projects={projects}
+          onSelectProject={setActiveProject}
           settings={settings}
           onOpenCreateModal={() => setIsCreateModalOpen(true)}
         />
@@ -238,71 +242,79 @@ export const App: React.FC = () => {
               </p>
             </div>
           ) : (
-            <>
-              {currentTab === 'dashboard' && (
-                <Dashboard
-                  projects={projects}
-                  onOpenCreateModal={() => setIsCreateModalOpen(true)}
-                  onSelectProject={handleSelectProject}
-                  onSelectTab={setCurrentTab}
-                  settings={settings}
-                />
-              )}
-
-              {currentTab === 'workspace' && (
-                activeProject ? (
-                  <ProjectWorkspace
-                    project={activeProject}
-                    onUpdateProject={(updated) => {
-                      setActiveProject(updated);
-                      setProjects((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
-                    }}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentTab}
+                initial={shouldReduceMotion ? undefined : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={shouldReduceMotion ? undefined : { opacity: 0, y: -8 }}
+                transition={{ duration: 0.2 }}
+              >
+                {currentTab === 'dashboard' && (
+                  <Dashboard
+                    projects={projects}
+                    onOpenCreateModal={() => setIsCreateModalOpen(true)}
+                    onSelectProject={handleSelectProject}
                     onSelectTab={setCurrentTab}
-                    onRefreshProject={handleRefreshActiveProject}
+                    settings={settings}
                   />
-                ) : (
-                  <div className="p-16 text-center card card-muted border-dashed">
-                    <h3 className="text-base font-semibold text-text1">
-                      No Project Selected
-                    </h3>
-                    <p className="text-xs text-text3 mt-1 mb-6">
-                      Create a new project or select an existing one to enter the studio workspace.
-                    </p>
-                    <button
-                      onClick={() => setIsCreateModalOpen(true)}
-                      className="btn-primary"
-                    >
-                      Create New Project
-                    </button>
-                  </div>
-                )
-              )}
+                )}
 
-            {currentTab === 'activity' && (
-              <AgentActivityView
-                activeProject={activeProject}
-                projects={projects}
-                onSelectProject={setActiveProject}
-              />
-            )}
+                {currentTab === 'workspace' && (
+                  activeProject ? (
+                    <ProjectWorkspace
+                      project={activeProject}
+                      onUpdateProject={(updated) => {
+                        setActiveProject(updated);
+                        setProjects((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+                      }}
+                      onSelectTab={setCurrentTab}
+                      onRefreshProject={handleRefreshActiveProject}
+                    />
+                  ) : (
+                    <div className="p-16 text-center card card-muted border-dashed">
+                      <h3 className="text-base font-semibold text-text1">
+                        No Project Selected
+                      </h3>
+                      <p className="text-xs text-text3 mt-1 mb-6">
+                        Create a new project or select an existing one to enter the studio workspace.
+                      </p>
+                      <button
+                        onClick={() => setIsCreateModalOpen(true)}
+                        className="btn-primary"
+                      >
+                        Create New Project
+                      </button>
+                    </div>
+                  )
+                )}
 
-            {currentTab === 'projects' && (
-              <MyProjects
-                projects={projects}
-                onSelectProject={handleSelectProject}
-                onOpenCreateModal={() => setIsCreateModalOpen(true)}
-                onRefreshProjects={loadInitialData}
-              />
-            )}
+                {currentTab === 'activity' && (
+                  <AgentActivityView
+                    activeProject={activeProject}
+                    projects={projects}
+                    onSelectProject={setActiveProject}
+                  />
+                )}
 
-            {currentTab === 'settings' && (
-              <SettingsView
-                settings={settings}
-                onRefreshSettings={loadInitialData}
-              />
-            )}
-          </>
-        )}
+                {currentTab === 'projects' && (
+                  <MyProjects
+                    projects={projects}
+                    onSelectProject={handleSelectProject}
+                    onOpenCreateModal={() => setIsCreateModalOpen(true)}
+                    onRefreshProjects={loadInitialData}
+                  />
+                )}
+
+                {currentTab === 'settings' && (
+                  <SettingsView
+                    settings={settings}
+                    onRefreshSettings={loadInitialData}
+                  />
+                )}
+              </motion.div>
+            </AnimatePresence>
+          )}
       </main>
       </div>
 
