@@ -8,11 +8,11 @@ import {
   Save,
   Copy,
   Check,
-  Terminal
+  Terminal,
+  Loader2
 } from 'lucide-react';
 import { SettingsData } from '../../types';
 import { api } from '../../services/api';
-import { useTheme } from '../../contexts/ThemeContext';
 
 interface SettingsViewProps {
   settings: SettingsData | null;
@@ -23,7 +23,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   settings,
   onRefreshSettings,
 }) => {
-  const { isDark } = useTheme();
   const [ollamaUrl, setOllamaUrl] = useState(settings?.ollama_base_url || 'http://localhost:11434');
   const [ollamaModel, setOllamaModel] = useState(settings?.ollama_model || 'llama3.2');
   const [supabaseUrl, setSupabaseUrl] = useState(settings?.supabase_url || '');
@@ -95,222 +94,202 @@ CREATE POLICY "Allow public read/write" ON projects FOR ALL USING (true) WITH CH
     setTimeout(() => setCopiedSql(false), 2000);
   };
 
-  const cardBg = isDark ? 'bg-[#0F1626]' : 'bg-white';
-  const cardBorder = isDark ? 'border-purple-500/20' : 'border-purple-200 shadow-md';
-  const subCardBorder = isDark ? 'border-slate-800' : 'border-slate-200 shadow-sm';
-  const inputBg = isDark ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900';
-  const textPrimary = isDark ? 'text-white' : 'text-slate-900';
-  const textMuted = isDark ? 'text-slate-400' : 'text-slate-500';
-  const labelColor = isDark ? 'text-slate-300' : 'text-slate-700';
-
   return (
-    <div className="max-w-4xl mx-auto space-y-8 pb-20">
+    <div className="max-w-3xl mx-auto space-y-6 pb-20">
       <div>
-        <h1 className={`text-2xl font-bold tracking-tight ${textPrimary}`}>System & AI Settings</h1>
-        <p className={`text-xs mt-1 ${textMuted}`}>
-          Configure local Ollama LLM inference, Supabase cloud sync, and fallback execution.
+        <h1 className="text-2xl font-bold tracking-tight text-text1">System Settings</h1>
+        <p className="text-xs text-text3 mt-0.5">
+          Configure local Ollama inference, model endpoints, and database synchronization.
         </p>
       </div>
 
       <form onSubmit={handleSave} className="space-y-6">
-        {/* Ollama Configuration Section */}
-        <div className={`p-6 md:p-8 rounded-3xl border space-y-5 shadow-xl ${cardBg} ${cardBorder}`}>
-          <div className="flex items-center justify-between">
+        {/* Section 1: Ollama Local LLM Configuration */}
+        <div className="card p-6 md:p-8 space-y-5">
+          <div className="flex items-center justify-between pb-3 border-b border-border">
             <div className="flex items-center gap-3">
-              <div className={`p-2.5 rounded-xl border ${isDark ? 'bg-purple-500/15 border-purple-500/30 text-purple-400' : 'bg-purple-100 border-purple-200 text-purple-600'}`}>
+              <div className="w-9 h-9 rounded-xl bg-accent-tint text-accent-text flex items-center justify-center shrink-0">
                 <Cpu className="w-5 h-5" />
               </div>
               <div>
-                <h2 className={`text-lg font-bold ${textPrimary}`}>Local AI Inference (Ollama)</h2>
-                <p className={`text-xs ${textMuted}`}>Run completely offline models with zero API subscription costs.</p>
+                <h2 className="text-base font-bold text-text1">Local AI Inference (Ollama)</h2>
+                <p className="text-xs text-text3">
+                  Direct privacy-first open-weight model execution.
+                </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <span
+              className={`pill text-xs font-semibold ${
+                settings?.ollama_status?.online
+                  ? 'pill-accent'
+                  : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+              }`}
+            >
               <span
-                className={`text-xs px-2.5 py-1 rounded-full font-bold flex items-center gap-1.5 ${
-                  settings?.ollama_status?.online
-                    ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                    : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                className={`w-1.5 h-1.5 rounded-full ${
+                  settings?.ollama_status?.online ? 'bg-emerald-500' : 'bg-amber-500'
                 }`}
-              >
-                <span className={`w-2 h-2 rounded-full ${settings?.ollama_status?.online ? 'bg-emerald-400' : 'bg-amber-400'}`} />
-                {settings?.ollama_status?.online ? 'Ollama Online' : 'Ollama Offline'}
-              </span>
-            </div>
+              />
+              <span>{settings?.ollama_status?.online ? 'Ollama Online' : 'Ollama Offline'}</span>
+            </span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className={`text-xs font-semibold uppercase tracking-wider block mb-1.5 ${labelColor}`}>
-                Ollama Base URL
-              </label>
+              <label className="label block mb-1.5">Ollama Server Base URL</label>
               <input
                 type="text"
                 value={ollamaUrl}
                 onChange={(e) => setOllamaUrl(e.target.value)}
                 placeholder="http://localhost:11434"
-                className={`w-full px-3.5 py-2.5 rounded-xl border text-xs focus:outline-none focus:border-purple-500 ${inputBg}`}
+                className="input text-xs"
               />
             </div>
 
             <div>
-              <label className={`text-xs font-semibold uppercase tracking-wider block mb-1.5 ${labelColor}`}>
-                Default Model Name
-              </label>
+              <label className="label block mb-1.5">Default Model Name</label>
               <input
                 type="text"
                 value={ollamaModel}
                 onChange={(e) => setOllamaModel(e.target.value)}
                 placeholder="llama3.2, mistral, gemma2, etc."
-                className={`w-full px-3.5 py-2.5 rounded-xl border text-xs focus:outline-none focus:border-purple-500 ${inputBg}`}
+                className="input text-xs"
               />
             </div>
           </div>
 
-          {/* Test Connection Button & Result */}
-          <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t ${isDark ? 'border-slate-800' : 'border-slate-200'}`}>
+          {/* Test Connection Button & Inline Result */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-border">
             <button
               type="button"
               onClick={handleTestOllama}
               disabled={testingOllama}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold border transition-all self-start ${
-                isDark
-                  ? 'text-purple-300 bg-purple-500/15 hover:bg-purple-500/25 border-purple-500/30'
-                  : 'text-purple-700 bg-purple-100 hover:bg-purple-200 border-purple-300'
-              }`}
+              className="btn-ghost text-xs self-start"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${testingOllama ? 'animate-spin' : ''}`} />
-              <span>{testingOllama ? 'Testing Connection...' : 'Test Ollama Connection'}</span>
+              {testingOllama ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <RefreshCw className="w-3.5 h-3.5" />
+              )}
+              <span>{testingOllama ? 'Probing Connection...' : 'Test Ollama Connection'}</span>
             </button>
 
             {testResult && (
               <div className="text-xs">
                 {testResult.status.online ? (
-                  <span className="text-emerald-500 font-semibold flex items-center gap-1.5">
+                  <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1.5">
                     <CheckCircle2 className="w-4 h-4" />
-                    Ollama v{testResult.status.version} detected! ({testResult.models?.length || 0} models installed)
+                    Ollama v{testResult.status.version} connected ({testResult.models?.length || 0} models available)
                   </span>
                 ) : (
-                  <span className="text-amber-500 flex items-center gap-1.5">
+                  <span className="text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1.5">
                     <AlertCircle className="w-4 h-4" />
-                    {testResult.status.error} (Creative engine will use smart fallback)
+                    {testResult.status.error || 'Connection failed'} (Using fallback)
                   </span>
                 )}
               </div>
             )}
           </div>
 
-          {/* Quick Ollama CLI command callout */}
-          <div className={`p-4 rounded-2xl border text-xs space-y-1.5 ${isDark ? 'bg-slate-950/80 border-slate-900' : 'bg-slate-50 border-slate-200'}`}>
-            <div className={`flex items-center gap-1.5 font-bold uppercase text-[10px] ${textMuted}`}>
-              <Terminal className="w-3.5 h-3.5 text-purple-500" />
-              Quick Setup Command
+          {/* Quick Setup Command */}
+          <div className="card-muted p-3.5 space-y-1.5 text-xs">
+            <div className="flex items-center gap-1.5 text-text3 font-semibold text-[11px] uppercase tracking-wider">
+              <Terminal className="w-3.5 h-3.5 text-accent" />
+              <span>Quick Terminal Command</span>
             </div>
-            <p className={textMuted}>
-              To download and launch the recommended local model on your system, run:
+            <p className="text-text3 text-xs">
+              To pull and serve the recommended local model on your machine:
             </p>
-            <div className={`p-2 rounded-lg font-mono text-[11px] border ${isDark ? 'bg-slate-900 text-purple-300 border-slate-800' : 'bg-white text-purple-700 border-slate-200'}`}>
+            <div className="p-2 rounded-lg bg-surface border border-border font-mono text-xs text-text1">
               ollama run llama3.2
             </div>
           </div>
         </div>
 
-        {/* Supabase Cloud Persistence Section */}
-        <div className={`p-6 md:p-8 rounded-3xl border space-y-5 shadow-xl ${cardBg} ${subCardBorder}`}>
-          <div className="flex items-center justify-between">
+        {/* Section 2: Supabase Cloud Database */}
+        <div className="card p-6 md:p-8 space-y-5">
+          <div className="flex items-center justify-between pb-3 border-b border-border">
             <div className="flex items-center gap-3">
-              <div className={`p-2.5 rounded-xl border ${isDark ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400' : 'bg-emerald-100 border-emerald-200 text-emerald-600'}`}>
+              <div className="w-9 h-9 rounded-xl bg-surface-muted text-text1 flex items-center justify-center shrink-0 border border-border">
                 <Database className="w-5 h-5" />
               </div>
               <div>
-                <h2 className={`text-lg font-bold ${textPrimary}`}>Database & Supabase Sync</h2>
-                <p className={`text-xs ${textMuted}`}>
-                  Dual-tier persistence: Automatic local SQLite storage + optional Supabase cloud replication.
+                <h2 className="text-base font-bold text-text1">Database & Supabase Sync</h2>
+                <p className="text-xs text-text3">
+                  Dual-tier storage: Local SQLite database + optional Supabase cloud replication.
                 </p>
               </div>
             </div>
 
-            <span
-              className={`text-xs px-2.5 py-1 rounded-full font-bold ${
-                settings?.supabase_configured
-                  ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                  : isDark ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-500'
-              }`}
-            >
-              {settings?.supabase_configured ? 'Supabase Connected' : 'Local SQLite Active'}
+            <span className="pill text-xs">
+              {settings?.supabase_configured ? 'Supabase Synced' : 'Local SQLite Active'}
             </span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className={`text-xs font-semibold uppercase tracking-wider block mb-1.5 ${labelColor}`}>
-                Supabase Project URL
-              </label>
+              <label className="label block mb-1.5">Supabase Project URL</label>
               <input
                 type="text"
                 value={supabaseUrl}
                 onChange={(e) => setSupabaseUrl(e.target.value)}
                 placeholder="https://xyzcompany.supabase.co"
-                className={`w-full px-3.5 py-2.5 rounded-xl border text-xs focus:outline-none focus:border-purple-500 ${inputBg}`}
+                className="input text-xs"
               />
             </div>
 
             <div>
-              <label className={`text-xs font-semibold uppercase tracking-wider block mb-1.5 ${labelColor}`}>
-                Supabase Anon / Secret Key
-              </label>
+              <label className="label block mb-1.5">Supabase Anon Key</label>
               <input
                 type="password"
                 value={supabaseKey}
                 onChange={(e) => setSupabaseKey(e.target.value)}
                 placeholder="eyJhbGciOi..."
-                className={`w-full px-3.5 py-2.5 rounded-xl border text-xs focus:outline-none focus:border-purple-500 ${inputBg}`}
+                className="input text-xs"
               />
             </div>
           </div>
 
           {/* Copyable SQL Schema */}
-          <div className={`space-y-2 pt-2 border-t ${isDark ? 'border-slate-800' : 'border-slate-200'}`}>
+          <div className="space-y-2 pt-2 border-t border-border">
             <div className="flex items-center justify-between">
-              <span className={`text-xs font-bold uppercase tracking-wider ${textMuted}`}>
-                Supabase Table Schema (SQL)
-              </span>
+              <span className="label">Supabase Table Schema (SQL)</span>
               <button
                 type="button"
                 onClick={handleCopySql}
-                className="flex items-center gap-1 text-xs text-purple-500 hover:text-purple-400"
+                className="flex items-center gap-1 text-xs text-accent hover:underline font-medium"
               >
                 {copiedSql ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
                 <span>{copiedSql ? 'Copied SQL' : 'Copy Schema'}</span>
               </button>
             </div>
-            <pre className={`p-3 rounded-xl font-mono text-[11px] border overflow-x-auto ${isDark ? 'bg-slate-950 text-slate-400 border-slate-900' : 'bg-slate-50 text-slate-700 border-slate-200'}`}>
+            <pre className="card-muted p-3.5 font-mono text-[11px] text-text2 overflow-x-auto">
               {sqlSchema}
             </pre>
           </div>
         </div>
 
-        {/* Fallback & Hackathon Presentation Mode */}
-        <div className={`p-6 rounded-2xl border flex items-center justify-between ${cardBg} ${subCardBorder}`}>
+        {/* Section 3: Resilient Creative Fallback */}
+        <div className="card p-5 flex items-center justify-between gap-4">
           <div>
-            <h3 className={`font-bold text-sm ${textPrimary}`}>Resilient Creative Fallback Engine</h3>
-            <p className={`text-xs mt-0.5 ${textMuted}`}>
-              Automatically generates rich, structured creative scripts even when Ollama is offline or downloading models.
+            <h3 className="font-semibold text-sm text-text1">Resilient Creative Fallback Engine</h3>
+            <p className="text-xs text-text3 mt-0.5">
+              Generates rich, structured narrative treatments if local Ollama inference is offline.
             </p>
           </div>
           <input
             type="checkbox"
             checked={demoFallback}
             onChange={(e) => setDemoFallback(e.target.checked)}
-            className="w-5 h-5 rounded accent-purple-600 cursor-pointer"
+            className="w-4 h-4 rounded accent-accent cursor-pointer"
           />
         </div>
 
         {/* Save Bar */}
-        <div className="flex items-center justify-between pt-4">
+        <div className="flex items-center justify-between pt-2">
           {savedSuccess && (
-            <span className="text-xs font-semibold text-emerald-500 flex items-center gap-1.5 animate-fadeIn">
+            <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 animate-fadeIn">
               <CheckCircle2 className="w-4 h-4" />
               Settings updated successfully!
             </span>
@@ -319,9 +298,13 @@ CREATE POLICY "Allow public read/write" ON projects FOR ALL USING (true) WITH CH
             <button
               type="submit"
               disabled={saving}
-              className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-purple-600 hover:bg-purple-500 shadow-lg shadow-purple-900/30 transition-all"
+              className="btn-primary text-xs"
             >
-              <Save className="w-4 h-4" />
+              {saving ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Save className="w-3.5 h-3.5" />
+              )}
               <span>{saving ? 'Saving...' : 'Save Configuration'}</span>
             </button>
           </div>

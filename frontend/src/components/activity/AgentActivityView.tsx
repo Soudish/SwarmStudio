@@ -6,10 +6,11 @@ import {
   Headphones,
   CheckCircle2,
   Activity,
-  Bot
+  Bot,
+  ArrowRight,
+  Clock
 } from 'lucide-react';
 import { ProjectData } from '../../types';
-import { useTheme } from '../../contexts/ThemeContext';
 
 interface AgentActivityViewProps {
   activeProject: ProjectData | null;
@@ -22,7 +23,6 @@ export const AgentActivityView: React.FC<AgentActivityViewProps> = ({
   projects,
   onSelectProject,
 }) => {
-  const { isDark } = useTheme();
   const [selectedAgentFilter, setSelectedAgentFilter] = useState<string>('all');
 
   const activities = activeProject?.activities || [];
@@ -30,7 +30,9 @@ export const AgentActivityView: React.FC<AgentActivityViewProps> = ({
   const getAgentStatus = (agentName: string) => {
     if (!activeProject) return 'idle';
     if (activeProject.status === 'completed') return 'completed';
-    const agentActs = activities.filter((a) => a.agent_name.toLowerCase().includes(agentName.toLowerCase()));
+    const agentActs = activities.filter((a) =>
+      a.agent_name.toLowerCase().includes(agentName.toLowerCase())
+    );
     if (!agentActs.length) return 'waiting';
     const last = agentActs[agentActs.length - 1];
     return last.status;
@@ -40,10 +42,10 @@ export const AgentActivityView: React.FC<AgentActivityViewProps> = ({
     {
       id: 'research',
       name: 'Research Agent',
-      role: 'World-Building & Lore Researcher',
+      role: 'World Lore & Lore Researcher',
       icon: Brain,
-      color: 'text-blue-500 bg-blue-500/15 border-blue-500/30',
-      task: 'Construct world lore, laws of physics/magic, and multi-dimensional character dossiers.',
+      dotColor: 'bg-agent-research',
+      task: 'Constructs world lore, physical/magic laws, and character dossiers.',
       status: getAgentStatus('Research Agent'),
     },
     {
@@ -51,17 +53,17 @@ export const AgentActivityView: React.FC<AgentActivityViewProps> = ({
       name: 'Story Agent',
       role: 'Screenwriter & Narrative Architect',
       icon: Feather,
-      color: 'text-purple-500 bg-purple-500/15 border-purple-500/30',
-      task: 'Draft logline, three-act structure, script excerpts, and scene breakdown.',
+      dotColor: 'bg-agent-story',
+      task: 'Drafts logline, three-act structure, script treatments, and scene beats.',
       status: getAgentStatus('Story Agent'),
     },
     {
       id: 'visual',
       name: 'Visual Agent',
-      role: 'Art Director & Concept Artist',
+      role: 'Art Director & Visual Designer',
       icon: Palette,
-      color: 'text-amber-500 bg-amber-500/15 border-amber-500/30',
-      task: 'Formulate color palettes, cinematography directives, and Midjourney image prompts.',
+      dotColor: 'bg-agent-visual',
+      task: 'Formulates color palettes, lighting setups, and FLUX image prompts.',
       status: getAgentStatus('Visual Agent'),
     },
     {
@@ -69,17 +71,17 @@ export const AgentActivityView: React.FC<AgentActivityViewProps> = ({
       name: 'Audio Agent',
       role: 'Sound Designer & Music Supervisor',
       icon: Headphones,
-      color: 'text-emerald-500 bg-emerald-500/15 border-emerald-500/30',
-      task: 'Design musical score motifs, soundtrack tracks, voice casting, and SFX cues.',
+      dotColor: 'bg-agent-audio',
+      task: 'Scores soundtrack themes, voice casting notes, and Foley SFX cues.',
       status: getAgentStatus('Audio Agent'),
     },
     {
       id: 'critic',
       name: 'Critic Agent',
-      role: 'Lead Editorial & Narrative Critic',
+      role: 'Executive Editorial & Continuity',
       icon: CheckCircle2,
-      color: 'text-violet-500 bg-violet-500/15 border-violet-500/30',
-      task: 'Audit cross-department continuity, score quality, and identify improvement directives.',
+      dotColor: 'bg-agent-critic',
+      task: 'Audits narrative continuity, scores quality (0–100), and flags revisions.',
       status: getAgentStatus('Critic Agent'),
     },
   ];
@@ -89,40 +91,33 @@ export const AgentActivityView: React.FC<AgentActivityViewProps> = ({
     return a.agent_name.toLowerCase().includes(selectedAgentFilter.toLowerCase());
   });
 
-  const cardBg = isDark ? 'bg-[#0F1626]' : 'bg-white';
-  const cardBorder = isDark ? 'border-slate-800' : 'border-slate-200 shadow-sm';
-  const textPrimary = isDark ? 'text-white' : 'text-slate-900';
-  const textMuted = isDark ? 'text-slate-400' : 'text-slate-500';
-
   return (
-    <div className="space-y-8 pb-20">
+    <div className="space-y-6 pb-20">
       {/* Top Header & Project Selector */}
-      <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-2xl border ${cardBg} ${isDark ? 'border-purple-500/20' : 'border-purple-200 shadow-md'}`}>
+      <div className="card p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-purple-500 mb-1">
-            <Activity className="w-4 h-4 animate-pulse" />
-            Live Swarm Orchestration Telemetry
+          <div className="flex items-center gap-2 mb-1">
+            <span className="w-2 h-2 rounded-full bg-accent animate-ping" />
+            <span className="label text-accent">Live Telemetry Flow</span>
           </div>
-          <h1 className={`text-xl sm:text-2xl font-bold tracking-tight ${textPrimary}`}>
-            Multi-Agent Execution Pipeline
+          <h1 className="text-xl font-bold tracking-tight text-text1">
+            Multi-Agent Swarm Pipeline
           </h1>
-          <p className={`text-xs mt-1 ${textMuted}`}>
-            Monitoring CrewAI autonomous agents collaborating across creative departments.
+          <p className="text-xs text-text3 mt-0.5">
+            Real-time execution log and collaboration graph across the 5 specialized autonomous agents.
           </p>
         </div>
 
         {/* Project Dropdown */}
         <div className="flex items-center gap-2">
-          <label className={`text-xs whitespace-nowrap ${textMuted}`}>Project:</label>
+          <label className="text-xs text-text3 whitespace-nowrap">Active Project:</label>
           <select
             value={activeProject?.id || ''}
             onChange={(e) => {
               const found = projects.find((p) => p.id === e.target.value);
               if (found) onSelectProject(found);
             }}
-            className={`px-3 py-2 rounded-xl border text-xs focus:outline-none focus:border-purple-500 font-medium ${
-              isDark ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
-            }`}
+            className="input text-xs py-1.5 px-3 font-medium max-w-[220px]"
           >
             {projects.map((p) => (
               <option key={p.id} value={p.id}>
@@ -133,13 +128,10 @@ export const AgentActivityView: React.FC<AgentActivityViewProps> = ({
         </div>
       </div>
 
-      {/* Swarm Architecture Workflow Flowchart */}
-      <div className={`p-6 rounded-2xl border space-y-4 ${cardBg} ${cardBorder}`}>
-        <h2 className={`text-sm font-bold uppercase tracking-wider ${textMuted}`}>
-          Agent Collaboration Architecture & Dependency Graph
-        </h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-3 relative">
+      {/* Pipeline Progression Tracker */}
+      <div className="card p-5 space-y-3">
+        <span className="label block">Sequential Execution Pipeline</span>
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-2.5">
           {agents.map((ag, i) => {
             const Icon = ag.icon;
             const isCompleted = ag.status === 'completed';
@@ -148,38 +140,38 @@ export const AgentActivityView: React.FC<AgentActivityViewProps> = ({
             return (
               <div
                 key={ag.id}
-                className={`p-4 rounded-xl border transition-all flex flex-col justify-between ${
+                className={`p-3.5 rounded-xl border transition-all flex flex-col justify-between ${
                   isRunning
-                    ? isDark ? 'bg-purple-950/40 border-purple-500 shadow-lg shadow-purple-600/20' : 'bg-purple-100/70 border-purple-400 shadow-md'
+                    ? 'border-accent bg-accent-tint shadow-sm'
                     : isCompleted
-                    ? isDark ? 'bg-[#131B2E] border-emerald-500/40' : 'bg-emerald-50 border-emerald-300'
-                    : isDark ? 'bg-slate-900/50 border-slate-800 opacity-70' : 'bg-slate-50 border-slate-200 opacity-80'
+                    ? 'border-border bg-surface'
+                    : 'border-border bg-surface-muted opacity-70'
                 }`}
               >
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">Step 0{i + 1}</span>
+                    <span className="text-[10px] font-bold text-text3 uppercase">
+                      0{i + 1}
+                    </span>
                     <span
-                      className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                      className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${
                         isRunning
-                          ? 'bg-amber-500/20 text-amber-500 animate-pulse'
+                          ? 'bg-accent text-surface animate-pulse'
                           : isCompleted
-                          ? 'bg-emerald-500/20 text-emerald-500'
-                          : isDark ? 'bg-slate-800 text-slate-400' : 'bg-slate-200 text-slate-600'
+                          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                          : 'bg-surface-muted text-text3'
                       }`}
                     >
-                      {isRunning ? 'Running' : isCompleted ? 'Completed' : 'Waiting'}
+                      {isRunning ? 'Active' : isCompleted ? 'Done' : 'Waiting'}
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <div className={`p-1.5 rounded-lg border ${ag.color}`}>
-                      <Icon className="w-4 h-4" />
-                    </div>
-                    <span className={`font-bold text-xs ${textPrimary}`}>{ag.name}</span>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Icon className={`w-3.5 h-3.5 ${isRunning ? 'text-accent' : 'text-text2'}`} />
+                    <span className="font-semibold text-xs text-text1 truncate">{ag.name}</span>
                   </div>
 
-                  <p className={`text-[11px] line-clamp-2 mt-1 ${textMuted}`}>{ag.task}</p>
+                  <p className="text-[11px] text-text3 line-clamp-2 mt-1 leading-snug">{ag.task}</p>
                 </div>
               </div>
             );
@@ -187,112 +179,117 @@ export const AgentActivityView: React.FC<AgentActivityViewProps> = ({
         </div>
       </div>
 
-      {/* Agent Status Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {agents.map((ag) => {
-          const Icon = ag.icon;
-          const status = ag.status;
-          return (
-            <div
-              key={ag.id}
-              className={`p-5 rounded-2xl border space-y-3 shadow-md ${cardBg} ${cardBorder}`}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className={`p-2 rounded-xl border ${ag.color}`}>
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className={`font-bold text-sm ${textPrimary}`}>{ag.name}</h3>
-                    <span className="text-[11px] text-purple-500 font-medium">{ag.role}</span>
-                  </div>
-                </div>
-
-                <span
-                  className={`text-xs px-2.5 py-1 rounded-full font-bold ${
-                    status === 'running'
-                      ? 'bg-amber-500/15 text-amber-500 border border-amber-500/30 animate-pulse'
-                      : status === 'completed'
-                      ? 'bg-emerald-500/15 text-emerald-500 border border-emerald-500/30'
-                      : isDark ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-500'
-                  }`}
-                >
-                  {status === 'running' ? 'Active' : status === 'completed' ? 'Done' : 'Idle'}
-                </span>
-              </div>
-
-              <p className={`text-xs leading-relaxed ${textMuted}`}>{ag.task}</p>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Live Activity Stream Feed */}
-      <div className={`p-6 rounded-2xl border space-y-4 ${cardBg} ${cardBorder}`}>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <h2 className={`font-bold text-base ${textPrimary}`}>Execution Event Feed</h2>
-            <span className={`text-xs px-2 py-0.5 rounded-full ${isDark ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-600'}`}>
-              {filteredActivities.length} Events
-            </span>
+      {/* Two-Pane Layout: Agent Status (Left) & Thought Log (Right) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Left: 5 Agent Status Rows */}
+        <div className="lg:col-span-5 space-y-3">
+          <div className="flex items-center justify-between px-1">
+            <span className="label">Agent Status Roster</span>
+            <span className="text-xs text-text3">5 Active Agents</span>
           </div>
 
-          {/* Filter Pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
-            {['all', 'Research', 'Story', 'Visual', 'Audio', 'Critic'].map((f) => (
-              <button
-                key={f}
-                onClick={() => setSelectedAgentFilter(f)}
-                className={`px-3 py-1 rounded-lg font-medium transition-all ${
-                  selectedAgentFilter === f
-                    ? 'bg-purple-600 text-white'
-                    : isDark ? 'bg-slate-900 text-slate-400 hover:text-white' : 'bg-slate-100 text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                {f}
-              </button>
-            ))}
+          <div className="space-y-2.5">
+            {agents.map((ag) => {
+              const Icon = ag.icon;
+              const status = ag.status;
+              const isRunning = status === 'running';
+              const isDone = status === 'completed';
+
+              return (
+                <div
+                  key={ag.id}
+                  className={`card p-4 flex items-center justify-between gap-3 ${
+                    isRunning ? 'border-accent shadow-sm' : ''
+                  }`}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className={`w-2 h-2 rounded-full ${ag.dotColor} shrink-0`} />
+                    <div className="w-8 h-8 rounded-lg bg-surface-muted flex items-center justify-center shrink-0 border border-border">
+                      <Icon className="w-4 h-4 text-text2" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="font-semibold text-xs text-text1 truncate">{ag.name}</h3>
+                      <p className="text-[11px] text-text3 truncate">{ag.role}</p>
+                    </div>
+                  </div>
+
+                  <span
+                    className={`pill text-[10px] shrink-0 ${
+                      isRunning
+                        ? 'pill-accent font-semibold animate-pulse'
+                        : isDone
+                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                        : ''
+                    }`}
+                  >
+                    {isRunning ? 'Active' : isDone ? 'Done' : 'Waiting'}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
 
-        {filteredActivities.length === 0 ? (
-          <div className={`p-8 text-center text-xs ${textMuted}`}>
-            No agent activities recorded for this project yet. Start a generation to view live logs.
+        {/* Right: Thought & Execution Log Panel */}
+        <div className="lg:col-span-7 card p-5 space-y-4 flex flex-col">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border">
+            <div className="flex items-center gap-2">
+              <span className="label">Thought Log</span>
+              <span className="pill text-[10px]">{filteredActivities.length} Events</span>
+            </div>
+
+            {/* Filter Pills */}
+            <div className="flex items-center gap-1 overflow-x-auto text-xs scrollbar-none">
+              {['all', 'Research', 'Story', 'Visual', 'Audio', 'Critic'].map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setSelectedAgentFilter(f)}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
+                    selectedAgentFilter === f
+                      ? 'bg-text1 text-surface font-semibold'
+                      : 'text-text3 hover:text-text1 hover:bg-surface-muted'
+                  }`}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
           </div>
-        ) : (
-          <div className="space-y-3 max-h-[480px] overflow-y-auto pr-1">
-            {filteredActivities.map((act) => (
-              <div
-                key={act.id}
-                className={`p-3.5 rounded-xl border transition-all flex items-start gap-3 text-xs ${
-                  isDark
-                    ? 'bg-slate-950/70 border-slate-900 hover:border-purple-500/30'
-                    : 'bg-slate-50 border-slate-200 hover:border-purple-300'
-                }`}
-              >
-                <div className="mt-0.5 p-1 rounded-lg bg-purple-500/10 text-purple-500">
-                  <Bot className="w-4 h-4" />
-                </div>
-                <div className="flex-1 space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className={`font-bold ${textPrimary}`}>{act.agent_name}</span>
-                    <span className="text-[11px] text-slate-400">
+
+          {filteredActivities.length === 0 ? (
+            <div className="p-12 text-center text-xs text-text3">
+              No telemetry events recorded yet for this project. Start a generation to stream live logs.
+            </div>
+          ) : (
+            <div className="space-y-2.5 max-h-[500px] overflow-y-auto pr-1">
+              {filteredActivities.map((act) => (
+                <div
+                  key={act.id}
+                  className="card-muted p-3.5 space-y-1.5 transition-colors"
+                >
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-1.5 font-semibold text-text1">
+                      <Bot className="w-3.5 h-3.5 text-accent" />
+                      <span>{act.agent_name}</span>
+                    </div>
+                    <span className="text-[10px] text-text3 font-mono flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
                       {new Date(act.timestamp).toLocaleTimeString()}
                     </span>
                   </div>
-                  <p className={`leading-snug ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{act.message}</p>
+
+                  <p className="text-xs text-text2 leading-relaxed">{act.message}</p>
+
                   {act.details && (
-                    <div className={`text-[11px] font-mono p-2 rounded-lg mt-1 border ${
-                      isDark ? 'bg-slate-900/60 text-slate-400 border-slate-800/60' : 'bg-white text-slate-600 border-slate-200'
-                    }`}>
+                    <div className="font-mono text-[11px] p-2.5 rounded-lg bg-surface border border-border text-text2 whitespace-pre-wrap mt-1">
                       {act.details}
                     </div>
                   )}
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
